@@ -118,12 +118,12 @@ export default function SignupPage() {
         </form>
       </Form>
       <div className="mt-6 text-center text-sm">
-        <p className="text-muted-foreground">
+        <div className="text-muted-foreground">
           Já tem uma conta?{' '}
           <Link href="/login" className="font-semibold text-secondary hover:underline">
             Faça login
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
