@@ -100,18 +100,18 @@ export default function LoginPage() {
           </Button>
         </form>
       </Form>
-      <div className="mt-6 text-center text-sm">
-        <p className="text-muted-foreground">
-          Não tem uma conta?{' '}
-          <Link href="/signup" className="font-semibold text-secondary hover:underline">
-            Crie uma agora
-          </Link>
-        </p>
-        <p className="text-muted-foreground mt-2">
-          <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-secondary hover:underline">
-            Esqueceu sua senha?
-          </Link>
-        </p>
+      <div className="mt-6 text-center text-sm text-muted-foreground">
+        <div>
+            <span>Não tem uma conta? </span>
+            <Link href="/signup" className="font-semibold text-secondary hover:underline">
+                Crie uma agora
+            </Link>
+        </div>
+        <div className="mt-2">
+            <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-secondary hover:underline">
+                Esqueceu sua senha?
+            </Link>
+        </div>
       </div>
     </div>
   );

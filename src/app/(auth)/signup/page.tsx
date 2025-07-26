@@ -117,13 +117,13 @@ export default function SignupPage() {
           </Button>
         </form>
       </Form>
-      <div className="mt-6 text-center text-sm">
-        <p className="text-muted-foreground">
-          Já tem uma conta?{' '}
-          <Link href="/login" className="font-semibold text-secondary hover:underline">
-            Faça login
-          </Link>
-        </p>
+      <div className="mt-6 text-center text-sm text-muted-foreground">
+        <div>
+            <span>Já tem uma conta? </span>
+            <Link href="/login" className="font-semibold text-secondary hover:underline">
+                Faça login
+            </Link>
+        </div>
       </div>
     </div>
   );
