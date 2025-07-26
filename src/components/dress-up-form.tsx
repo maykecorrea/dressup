@@ -5,15 +5,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { performDressUp } from '@/app/actions';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 const formSchema = z.object({
   modelPhotoDataUri: z.string().min(1, { message: 'Por favor, envie uma imagem do modelo.' }),
@@ -84,6 +83,17 @@ export function DressUpForm() {
       });
     }
   };
+  
+  const handleDownload = () => {
+    if (generatedImage) {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = 'obra-prima.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   const ImageUpload = ({ fieldName, preview, label, icon }: { fieldName: 'modelPhotoDataUri' | 'garmentPhotoDataUri', preview: string | null, label: string, icon: React.ReactNode }) => (
     <FormField
@@ -125,7 +135,7 @@ export function DressUpForm() {
             Crie Seu Look
           </CardTitle>
           <CardDescription>
-            Envie suas imagens e ajuste as opções para gerar o provador virtual perfeito.
+            Envie suas imagens para gerar o provador virtual.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -135,47 +145,6 @@ export function DressUpForm() {
                 <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
                 <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Imagem da Roupa" icon={<Shirt />} />
               </div>
-
-              <FormField
-                control={form.control}
-                name="positivePrompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-lg font-semibold font-headline">Prompts Positivos</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="ex: alta qualidade, realista..."
-                        rows={4}
-                        className="resize-none"
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormDescription>Descreva os atributos desejados da imagem final.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="negativePrompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-lg font-semibold font-headline">Prompts Negativos</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="ex: borrado, deformado..."
-                        rows={4}
-                        className="resize-none"
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                     <FormDescription>Descreva o que você quer evitar na imagem final.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full font-bold" size="lg" disabled={isLoading}>
@@ -198,18 +167,30 @@ export function DressUpForm() {
       
       <Card className="shadow-lg sticky top-8">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Pré-visualização do Look</CardTitle>
+          <CardTitle className="text-2xl font-headline">Resultado</CardTitle>
           <CardDescription>O resultado gerado aparecerá aqui.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="aspect-square w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20">
+          <div className="aspect-square w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative group">
             {isLoading ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-muted-foreground">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
                 <p className="font-medium text-lg">A IA está fazendo sua mágica...</p>
               </div>
             ) : generatedImage ? (
-              <Image src={generatedImage} alt="Look gerado" width={1024} height={1024} className="object-contain w-full h-full" data-ai-hint="fashion model" />
+              <>
+                <Image src={generatedImage} alt="Look gerado" width={1024} height={1024} className="object-contain w-full h-full" data-ai-hint="fashion model" />
+                <Dialog>
+                   <DialogTrigger asChild>
+                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 text-white hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                       <ZoomIn className="h-6 w-6" />
+                     </Button>
+                   </DialogTrigger>
+                   <DialogContent className="max-w-4xl h-auto p-2">
+                      <Image src={generatedImage} alt="Look gerado em zoom" width={1200} height={1200} className="rounded-md object-contain w-full h-full" />
+                   </DialogContent>
+                </Dialog>
+              </>
             ) : (
               <div className="text-center text-muted-foreground p-4">
                 <Sparkles className="mx-auto h-16 w-16 mb-4 text-primary/50" />
@@ -218,6 +199,16 @@ export function DressUpForm() {
               </div>
             )}
           </div>
+           {generatedImage && !isLoading && (
+              <Button 
+                onClick={handleDownload}
+                className="w-full mt-4 font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
+                size="lg"
+              >
+                <Download className="mr-2 h-5 w-5" />
+                Baixar Obra Prima!
+              </Button>
+            )}
         </CardContent>
       </Card>
     </div>
