@@ -9,7 +9,7 @@ export default function AuthLayout({
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
       <div className="relative flex-1 hidden lg:block">
         <Image
-          src="https://placehold.co/1080x1920.png"
+          src="/img/f3.jpg"
           alt="Fashion model"
           layout="fill"
           objectFit="cover"
