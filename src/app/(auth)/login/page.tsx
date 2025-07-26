@@ -104,9 +104,11 @@ export default function LoginPage() {
       <div className="mt-6 text-center text-sm text-muted-foreground">
         <div className="flex justify-center items-center gap-1">
           <div>Não tem uma conta?</div>
-          <Link href="/signup" className="font-semibold text-secondary hover:underline">
-            Crie uma agora
-          </Link>
+          <div>
+            <Link href="/signup" className="font-semibold text-secondary hover:underline">
+              Crie uma agora
+            </Link>
+          </div>
         </div>
         <div className="mt-2">
           <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-secondary hover:underline">
