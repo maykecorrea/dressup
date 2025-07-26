@@ -102,7 +102,7 @@ export default function LoginPage() {
       </Form>
       <div className="mt-6 text-center text-sm">
         <div className="text-muted-foreground">
-          Não tem uma conta?{' '}
+          <span>Não tem uma conta? </span>
           <Link href="/signup" className="font-semibold text-secondary hover:underline">
             Crie uma agora
           </Link>

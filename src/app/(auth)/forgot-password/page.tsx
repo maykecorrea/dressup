@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
       </Form>
       <div className="mt-6 text-center text-sm">
         <div className="text-muted-foreground">
-          Lembrou a senha?{' '}
+          <span>Lembrou a senha? </span>
           <Link href="/login" className="font-semibold text-secondary hover:underline">
             Faça login
           </Link>
