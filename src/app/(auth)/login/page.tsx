@@ -20,12 +20,38 @@ import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2,LogIn } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
   password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
 });
+
+const ClientOnlyLinks = () => {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? (
+        <>
+            <div className="flex justify-center items-center gap-1">
+                <div>Não tem uma conta?</div>
+                <div>
+                    <Link href="/signup" className="font-semibold text-secondary hover:underline">
+                        Crie uma agora
+                    </Link>
+                </div>
+            </div>
+            <div className="mt-2">
+                <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-secondary hover:underline">
+                    Esqueceu sua senha?
+                </Link>
+            </div>
+        </>
+    ) : null;
+};
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -102,19 +128,7 @@ export default function LoginPage() {
         </form>
       </Form>
       <div className="mt-6 text-center text-sm text-muted-foreground">
-        <div className="flex justify-center items-center gap-1">
-          <div>Não tem uma conta?</div>
-          <div>
-            <Link href="/signup" className="font-semibold text-secondary hover:underline">
-              Crie uma agora
-            </Link>
-          </div>
-        </div>
-        <div className="mt-2">
-          <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-secondary hover:underline">
-            Esqueceu sua senha?
-          </Link>
-        </div>
+        <ClientOnlyLinks />
       </div>
     </div>
   );

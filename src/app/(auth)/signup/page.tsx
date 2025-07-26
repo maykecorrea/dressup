@@ -20,7 +20,7 @@ import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -30,6 +30,25 @@ const formSchema = z.object({
     message: "As senhas não coincidem.",
     path: ["confirmPassword"],
 });
+
+const ClientOnlyLink = () => {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? (
+        <div className="flex justify-center items-center gap-1">
+            <div>Já tem uma conta?</div>
+            <div>
+                <Link href="/login" className="font-semibold text-secondary hover:underline">
+                    Faça login
+                </Link>
+            </div>
+        </div>
+    ) : null;
+};
 
 export default function SignupPage() {
   const { toast } = useToast();
@@ -119,14 +138,7 @@ export default function SignupPage() {
         </form>
       </Form>
       <div className="mt-6 text-center text-sm text-muted-foreground">
-        <div className="flex justify-center items-center gap-1">
-            <div>Já tem uma conta?</div>
-            <div>
-                <Link href="/login" className="font-semibold text-secondary hover:underline">
-                    Faça login
-                </Link>
-            </div>
-        </div>
+        <ClientOnlyLink />
       </div>
     </div>
   );

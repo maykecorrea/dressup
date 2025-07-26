@@ -20,11 +20,30 @@ import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, MailQuestion } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
 });
+
+const ClientOnlyLink = () => {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? (
+        <div className="flex justify-center items-center gap-1">
+          <div>Lembrou a senha?</div>
+          <div>
+            <Link href="/login" className="font-semibold text-secondary hover:underline">
+              Faça login
+            </Link>
+          </div>
+        </div>
+    ) : null;
+};
 
 export default function ForgotPasswordPage() {
   const { toast } = useToast();
@@ -86,14 +105,7 @@ export default function ForgotPasswordPage() {
         </form>
       </Form>
       <div className="mt-6 text-center text-sm text-muted-foreground">
-        <div className="flex justify-center items-center gap-1">
-          <div>Lembrou a senha?</div>
-          <div>
-            <Link href="/login" className="font-semibold text-secondary hover:underline">
-              Faça login
-            </Link>
-          </div>
-        </div>
+        <ClientOnlyLink />
       </div>
     </div>
   );
