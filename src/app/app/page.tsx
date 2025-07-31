@@ -97,6 +97,9 @@ function AppPage() {
         showBackButton={false} 
       />
 
+      <div className="text-center mt-16 text-muted-foreground">
+        <p>Em breve, mais novidades!</p>
+      </div>
     </main>
   );
 }

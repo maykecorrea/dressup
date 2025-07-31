@@ -186,7 +186,7 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
-                                                    <ZoomOut className="h-6 w-6 text-muted-foreground" />
+                                                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))} />
                                                     <Slider
                                                         value={[zoom]}
                                                         min={0.5}
@@ -194,7 +194,7 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                                                         step={0.1}
                                                         onValueChange={(value) => setZoom(value[0])}
                                                     />
-                                                    <ZoomIn className="h-6 w-6 text-muted-foreground" />
+                                                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.min(2, prev + 0.1))} />
                                                 </div>
                                             </DialogContent>
                                         </Dialog>
