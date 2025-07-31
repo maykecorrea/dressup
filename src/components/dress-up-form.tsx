@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, Footprints, Gem, Snowflake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -19,20 +19,26 @@ import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   modelPhotoDataUri: z.string().min(1, { message: 'Por favor, envie uma imagem do modelo.' }),
-  garmentPhotoDataUri: z.string().min(1, { message: 'Por favor, envie uma imagem da roupa.' }),
+  garmentPhotoDataUri: z.string().min(1, { message: 'A imagem da roupa principal é obrigatória.' }),
+  shoesPhotoDataUri: z.string().optional(),
+  necklacePhotoDataUri: z.string().optional(),
+  coldWeatherPhotoDataUri: z.string().optional(),
   positivePrompt: z.string(),
   negativePrompt: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k";
+const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
 const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhados, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos";
 
 export function DressUpForm() {
   const { toast } = useToast();
   const [modelPreview, setModelPreview] = useState<string | null>(null);
   const [garmentPreview, setGarmentPreview] = useState<string | null>(null);
+  const [shoesPreview, setShoesPreview] = useState<string | null>(null);
+  const [necklacePreview, setNecklacePreview] = useState<string | null>(null);
+  const [coldWeatherPreview, setColdWeatherPreview] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -43,6 +49,9 @@ export function DressUpForm() {
     defaultValues: {
       modelPhotoDataUri: '',
       garmentPhotoDataUri: '',
+      shoesPhotoDataUri: '',
+      necklacePhotoDataUri: '',
+      coldWeatherPhotoDataUri: '',
       positivePrompt: defaultPositivePrompts,
       negativePrompt: defaultNegativePrompts,
     },
@@ -67,20 +76,32 @@ export function DressUpForm() {
   };
 
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, field: 'model' | 'garment') => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, field: keyof FormValues) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
-        if (field === 'model') {
-          setModelPreview(dataUri);
-          form.setValue('modelPhotoDataUri', dataUri);
-        } else {
-          setGarmentPreview(dataUri);
-          form.setValue('garmentPhotoDataUri', dataUri);
+        form.setValue(field, dataUri);
+        
+        switch (field) {
+            case 'modelPhotoDataUri':
+                setModelPreview(dataUri);
+                break;
+            case 'garmentPhotoDataUri':
+                setGarmentPreview(dataUri);
+                break;
+            case 'shoesPhotoDataUri':
+                setShoesPreview(dataUri);
+                break;
+            case 'necklacePhotoDataUri':
+                setNecklacePreview(dataUri);
+                break;
+            case 'coldWeatherPhotoDataUri':
+                setColdWeatherPreview(dataUri);
+                break;
         }
-        form.clearErrors(field === 'model' ? 'modelPhotoDataUri' : 'garmentPhotoDataUri');
+        form.clearErrors(field);
       };
       reader.readAsDataURL(file);
     }
@@ -112,14 +133,14 @@ export function DressUpForm() {
     if (generatedImage) {
       const link = document.createElement('a');
       link.href = generatedImage;
-      link.download = 'obra-prima.png';
+      link.download = 'look-completo.png';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
   };
 
-  const ImageUpload = ({ fieldName, preview, label, icon }: { fieldName: 'modelPhotoDataUri' | 'garmentPhotoDataUri', preview: string | null, label: string, icon: React.ReactNode }) => (
+  const ImageUpload = ({ fieldName, preview, label, icon }: { fieldName: keyof FormValues, preview: string | null, label: string, icon: React.ReactNode }) => (
     <FormField
       control={form.control}
       name={fieldName}
@@ -127,7 +148,7 @@ export function DressUpForm() {
         <FormItem className="w-full">
           <FormLabel className="flex items-center gap-2 text-lg font-semibold"><div className="text-secondary">{icon}</div>{label}</FormLabel>
           <FormControl>
-            <Card className="aspect-square w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 bg-muted/20">
+            <Card className="aspect-[4/5] w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 bg-muted/20">
               <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-4 rounded-lg">
                  <Upload className="h-10 w-10 mb-2" />
                  <p className="font-semibold">Clique para enviar</p>
@@ -138,7 +159,7 @@ export function DressUpForm() {
                 type="file"
                 accept="image/png, image/jpeg, image/webp"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                onChange={(e) => handleFileChange(e, fieldName === 'modelPhotoDataUri' ? 'model' : 'garment')}
+                onChange={(e) => handleFileChange(e, fieldName)}
                 disabled={isLoading}
               />
             </Card>
@@ -157,23 +178,28 @@ export function DressUpForm() {
           Sair
         </Button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
         <Card className="shadow-xl bg-gradient-to-br from-card to-muted/20 border-2 border-transparent hover:border-primary/50 transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-2xl font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary">
               <Wand2/>
-              Crie Seu Look
+              Crie Seu Look Completo
             </CardTitle>
             <CardDescription>
-              Envie suas imagens para gerar o provador virtual.
+              Envie a foto do(a) modelo e as peças para gerar um look completo. A roupa principal é obrigatória.
             </CardDescription>
           </CardHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
-                  <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Imagem da Roupa" icon={<Shirt />} />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="sm:col-span-3">
+                    <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
+                  </div>
+                  <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Roupa Principal" icon={<Shirt />} />
+                  <ImageUpload fieldName="coldWeatherPhotoDataUri" preview={coldWeatherPreview} label="Casaco (Opcional)" icon={<Snowflake />} />
+                  <ImageUpload fieldName="shoesPhotoDataUri" preview={shoesPreview} label="Sapatos (Opcional)" icon={<Footprints />} />
+                  <ImageUpload fieldName="necklacePhotoDataUri" preview={necklacePreview} label="Acessório (Opcional)" icon={<Gem />} />
                 </div>
               </CardContent>
               <CardFooter>
@@ -181,12 +207,12 @@ export function DressUpForm() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Gerando...
+                      Gerando Look Completo...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Gerar Look
+                      Gerar Look Completo
                     </>
                   )}
                 </Button>
@@ -197,19 +223,19 @@ export function DressUpForm() {
         
         <Card className="shadow-lg sticky top-8 bg-muted/20">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline">Resultado</CardTitle>
-            <CardDescription>O resultado gerado aparecerá aqui.</CardDescription>
+            <CardTitle className="text-2xl font-headline">Resultado do Look</CardTitle>
+            <CardDescription>O resultado gerado com o look completo aparecerá aqui.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-square w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative group">
+            <div className="aspect-[4/5] w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative group">
               {isLoading ? (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-muted-foreground">
                   <Loader2 className="h-16 w-16 animate-spin text-primary" />
-                  <p className="font-medium text-lg">A IA está fazendo sua mágica...</p>
+                  <p className="font-medium text-lg">A IA está montando o look...</p>
                 </div>
               ) : generatedImage ? (
                 <>
-                  <Image src={generatedImage} alt="Look gerado" width={1024} height={1024} className="object-contain w-full h-full" data-ai-hint="fashion model" />
+                  <Image src={generatedImage} alt="Look gerado" layout="fill" objectFit="contain" className="object-contain w-full h-full" data-ai-hint="fashion model full body" />
                   <Dialog>
                      <DialogTrigger asChild>
                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 text-white hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
@@ -217,15 +243,15 @@ export function DressUpForm() {
                        </Button>
                      </DialogTrigger>
                      <DialogContent className="max-w-4xl h-auto p-2 bg-background/80 backdrop-blur-sm">
-                        <Image src={generatedImage} alt="Look gerado em zoom" width={1200} height={1200} className="rounded-md object-contain w-full h-full" />
+                        <Image src={generatedImage} alt="Look gerado em zoom" width={1200} height={1500} className="rounded-md object-contain w-full h-full" />
                      </DialogContent>
                   </Dialog>
                 </>
               ) : (
                 <div className="text-center text-muted-foreground p-4">
                   <Sparkles className="mx-auto h-16 w-16 mb-4 text-secondary/50" />
-                  <p className="font-semibold text-lg">O resultado será mágico</p>
-                  <p className="text-sm">Preencha o formulário e clique em "Gerar Look"</p>
+                  <p className="font-semibold text-lg">O look completo será mágico</p>
+                  <p className="text-sm">Envie as peças e clique em "Gerar Look Completo"</p>
                 </div>
               )}
             </div>

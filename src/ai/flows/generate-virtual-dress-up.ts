@@ -1,11 +1,9 @@
-// This file is machine-generated - edit with care!
-
 'use server';
 
 /**
- * @fileOverview An AI agent that dresses a model in a new outfit.
+ * @fileOverview An AI agent that dresses a model in a complete outfit, including multiple garments and accessories.
  *
- * - generateVirtualDressUp - A function that handles the virtual dress up process.
+ * - generateVirtualDressUp - A function that handles the virtual dress up process for a full look.
  * - GenerateVirtualDressUpInput - The input type for the generateVirtualDressUp function.
  * - GenerateVirtualDressUpOutput - The return type for the generateVirtualDressUp function.
  */
@@ -22,17 +20,35 @@ const GenerateVirtualDressUpInputSchema = z.object({
   garmentPhotoDataUri: z
     .string()
     .describe(
-      "A photo of a garment, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of the main garment, as a data URI that must include a MIME type and use Base64 encoding."
     ),
-    positivePrompt: z.string().describe('Positive prompts to refine the garment style and integration.'),
-    negativePrompt: z.string().describe('Negative prompts to prevent undesirable characteristics.'),
+  shoesPhotoDataUri: z
+    .string()
+    .optional()
+    .describe(
+      "Optional: A photo of shoes, as a data URI."
+    ),
+  necklacePhotoDataUri: z
+    .string()
+    .optional()
+    .describe(
+      "Optional: A photo of a necklace or accessory, as a data URI."
+    ),
+  coldWeatherPhotoDataUri: z
+    .string()
+    .optional()
+    .describe(
+      "Optional: A photo of a cold-weather item like a jacket or coat, as a data URI."
+    ),
+  positivePrompt: z.string().describe('Positive prompts to refine the garment style and integration.'),
+  negativePrompt: z.string().describe('Negative prompts to prevent undesirable characteristics.'),
 });
 export type GenerateVirtualDressUpInput = z.infer<typeof GenerateVirtualDressUpInputSchema>;
 
 const GenerateVirtualDressUpOutputSchema = z.object({
   dressedUpPhotoDataUri: z
     .string()
-    .describe('The photo of the model dressed in the new outfit as a data URI.'),
+    .describe('The photo of the model dressed in the new complete outfit, as a data URI.'),
 });
 export type GenerateVirtualDressUpOutput = z.infer<typeof GenerateVirtualDressUpOutputSchema>;
 
@@ -40,43 +56,61 @@ export async function generateVirtualDressUp(input: GenerateVirtualDressUpInput)
   return generateVirtualDressUpFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateVirtualDressUpPrompt',
-  input: {schema: GenerateVirtualDressUpInputSchema},
-  output: {schema: GenerateVirtualDressUpOutputSchema},
-  prompt: `You are a professional fashion stylist. You will dress the model in the provided garment, taking into account the style and fit of the garment.
-
-Ensure the final image is high quality and realistic.
-
-Model Photo: {{media url=modelPhotoDataUri}}
-Garment Photo: {{media url=garmentPhotoDataUri}}
-
-Positive Prompts: {{{positivePrompt}}}
-Negative Prompts: {{{negativePrompt}}}
-
-Dress the model in the garment, and return the final image as a data URI. The final image should seamlessly integrate the garment onto the model, so it looks photorealistic.`, 
-});
-
 const generateVirtualDressUpFlow = ai.defineFlow(
   {
     name: 'generateVirtualDressUpFlow',
     inputSchema: GenerateVirtualDressUpInputSchema,
     outputSchema: GenerateVirtualDressUpOutputSchema,
   },
-  async input => {
-    const {media} = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: [
-          {media: {url: input.modelPhotoDataUri}},
-          {media: {url: input.garmentPhotoDataUri}},
-          {text: `Dress the model in the garment, ensuring a seamless and photorealistic integration. ${input.positivePrompt} ${input.negativePrompt}`},
-        ],
+  async (input) => {
+    const {
+      modelPhotoDataUri,
+      garmentPhotoDataUri,
+      shoesPhotoDataUri,
+      necklacePhotoDataUri,
+      coldWeatherPhotoDataUri,
+      positivePrompt,
+      negativePrompt,
+    } = input;
 
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'], // MUST provide both TEXT and IMAGE, IMAGE only won't work
-        },
-      });
+    const promptParts: any[] = [
+      { media: { url: modelPhotoDataUri } },
+      { text: "Você é um estilista de moda especialista. Sua tarefa é vestir a modelo da primeira imagem com as peças de roupa e acessórios fornecidos nas imagens seguintes para criar um look completo, coeso e estiloso." },
+      { text: "\nPeça Principal:" },
+      { media: { url: garmentPhotoDataUri } },
+    ];
 
-    return {dressedUpPhotoDataUri: media.url!};
+    if (coldWeatherPhotoDataUri) {
+        promptParts.push({ text: "\nCasaco/Jaqueta:" });
+        promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
+    }
+    if (shoesPhotoDataUri) {
+        promptParts.push({ text: "\nSapatos:" });
+        promptParts.push({ media: { url: shoesPhotoDataUri } });
+    }
+    if (necklacePhotoDataUri) {
+        promptParts.push({ text: "\nAcessório (Colar/etc):" });
+        promptParts.push({ media: { url: necklacePhotoDataUri } });
+    }
+    
+    promptParts.push({ text: `\nInstruções Adicionais: Vista a modelo com todas as peças fornecidas, garantindo que o resultado final seja uma imagem única, fotorealista e de alta qualidade. O look deve parecer natural e bem ajustado ao corpo da modelo. Considere o estilo de todas as peças para criar uma composição harmoniosa.`});
+    promptParts.push({ text: `\nPrompts Positivos (use como guia): ${positivePrompt}` });
+    promptParts.push({ text: `\nPrompts Negativos (evite estritamente): ${negativePrompt}` });
+    promptParts.push({ text: `\nRetorne apenas a imagem final da modelo com o look completo.` });
+
+
+    const { media } = await ai.generate({
+      model: 'googleai/gemini-2.0-flash-preview-image-generation',
+      prompt: promptParts,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
+    });
+
+    if (!media?.url) {
+      throw new Error('A IA não conseguiu gerar uma imagem para o look completo.');
+    }
+
+    return { dressedUpPhotoDataUri: media.url };
   }
 );
