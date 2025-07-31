@@ -1,7 +1,7 @@
 
 'use client';
 
-import { getGalleryImages, deleteImage } from "@/app/actions";
+import { getGalleryImages } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut } from "lucide-react";
@@ -24,21 +24,21 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useState, useTransition, useRef, MouseEvent as ReactMouseEvent } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState, useRef, MouseEvent as ReactMouseEvent } from "react";
 import { Slider } from "./ui/slider";
 import { cn } from "@/lib/utils";
 
 
 type GallerySectionProps = {
     showBackButton?: boolean;
+    images: string[];
+    setImages: React.Dispatch<React.SetStateAction<string[]>>;
+    onImageDeleted: (imageUrl: string) => void;
+    isDeleting: boolean;
 }
 
-export function GallerySection({ showBackButton = true }: GallerySectionProps) {
-    const [images, setImages] = useState<string[]>([]);
+export function GallerySection({ showBackButton = true, images, setImages, onImageDeleted, isDeleting }: GallerySectionProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const [isDeleting, startDeleteTransition] = useTransition();
-    const { toast } = useToast();
 
     // Zoom state
     const [zoom, setZoom] = useState(1);
@@ -56,26 +56,8 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
             setIsLoading(false);
         };
         fetchImages();
-    }, []);
+    }, [setImages]);
 
-    const handleDelete = async (imageUrl: string) => {
-        startDeleteTransition(async () => {
-            const result = await deleteImage({ imageUrl });
-            if (result.success) {
-                toast({
-                    title: "Sucesso!",
-                    description: result.message,
-                });
-                setImages((prevImages) => prevImages.filter(img => img !== imageUrl));
-            } else {
-                toast({
-                    title: "Erro",
-                    description: result.error,
-                    variant: "destructive",
-                });
-            }
-        });
-    };
 
     const resetZoomAndPosition = () => {
         setZoom(1);
@@ -228,7 +210,7 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(src)} disabled={isDeleting}>
+                                            <AlertDialogAction onClick={() => onImageDeleted(src)} disabled={isDeleting}>
                                                 {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                                 Sim, excluir imagem
                                             </AlertDialogAction>

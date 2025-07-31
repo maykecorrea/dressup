@@ -59,11 +59,14 @@ export async function saveImageToGallery(values: z.infer<typeof SaveImageInputSc
         
         const filename = `${Date.now()}.png`;
         const filepath = path.join(uploadsDir, filename);
+        const fileUrl = `/uploads/${filename}`;
 
         await fs.promises.writeFile(filepath, imageBuffer);
         
+        revalidatePath('/app');
         revalidatePath('/gallery');
-        return { success: true, message: 'Imagem salva na galeria!' };
+
+        return { success: true, message: 'Imagem salva na galeria!', imageUrl: fileUrl };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao salvar a imagem.';
         return { success: false, error: errorMessage };
@@ -114,6 +117,7 @@ export async function deleteImage(values: z.infer<typeof DeleteImageInputSchema>
 
         if (fs.existsSync(filepath)) {
             await fs.promises.unlink(filepath);
+            revalidatePath('/app');
             revalidatePath('/gallery');
             return { success: true, message: 'Imagem excluída com sucesso!' };
         } else {

@@ -8,8 +8,39 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { GallerySection } from '@/components/gallery-section';
 import { Separator } from '@/components/ui/separator';
+import { useState, useTransition } from 'react';
+import { deleteImage } from '../actions';
+import { useToast } from '@/hooks/use-toast';
 
 function AppPage() {
+  const [images, setImages] = useState<string[]>([]);
+  const [isDeleting, startDeleteTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleImageSaved = (newImageUrl: string) => {
+    setImages(prevImages => [newImageUrl, ...prevImages]);
+  };
+
+  const handleImageDeleted = (imageUrl: string) => {
+    startDeleteTransition(async () => {
+      const result = await deleteImage({ imageUrl });
+      if (result.success) {
+        toast({
+            title: "Sucesso!",
+            description: result.message,
+        });
+        setImages((prevImages) => prevImages.filter(img => img !== imageUrl));
+      } else {
+          toast({
+              title: "Erro",
+              description: result.error,
+              variant: "destructive",
+          });
+      }
+    });
+  };
+
+
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
       <header className="text-center mb-12">
@@ -54,11 +85,17 @@ function AppPage() {
         </div>
       </div>
       
-      <DressUpForm />
+      <DressUpForm onImageSaved={handleImageSaved} />
 
       <Separator className="my-12" />
 
-      <GallerySection showBackButton={false} />
+      <GallerySection 
+        images={images}
+        setImages={setImages}
+        onImageDeleted={handleImageDeleted}
+        isDeleting={isDeleting}
+        showBackButton={false} 
+      />
 
     </main>
   );

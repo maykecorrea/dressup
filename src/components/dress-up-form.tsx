@@ -44,10 +44,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface DressUpFormProps {
+  onImageSaved: (imageUrl: string) => void;
+}
+
 const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
 const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhadas, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos";
 
-export function DressUpForm() {
+export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const { toast } = useToast();
   const [modelPreview, setModelPreview] = useState<string | null>(null);
   const [garmentPreview, setGarmentPreview] = useState<string | null>(null);
@@ -65,7 +69,7 @@ export function DressUpForm() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
-  const imageRef = useRef<HTMLImageElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
 
 
   const form = useForm<FormValues>({
@@ -176,12 +180,13 @@ export function DressUpForm() {
     const result = await saveImageToGallery({ imageDataUri: generatedImage });
     setIsSaving(false);
 
-    if (result.success) {
+    if (result.success && result.imageUrl) {
       toast({
         title: 'Salvo!',
         description: 'Seu look foi salvo na galeria.',
         variant: 'default',
       });
+      onImageSaved(result.imageUrl);
     } else {
       toast({
         title: 'Erro ao Salvar',
@@ -432,7 +437,3 @@ export function DressUpForm() {
     </>
   );
 }
-
-    
-
-    
