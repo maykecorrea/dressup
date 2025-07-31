@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -82,65 +83,44 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
-    // Base prompt text
-    let promptText = `Tarefa: Você é um assistente de IA especialista em moda. Sua tarefa é vestir a modelo da "Imagem da Modelo" com um look completo usando as peças fornecidas. É crucial que você SUBSTITUA TODAS as roupas que a modelo está vestindo pelas novas peças.
-
-REGRA MAIS IMPORTANTE: MANTENHA O ROSTO E O CORPO DA MODELO ORIGINAL. O rosto, cabelo e características físicas da modelo na "Imagem da Modelo" NÃO DEVEM SER ALTERADOS. Apenas as roupas devem ser trocadas.
-
-Instruções passo a passo:
-1.  Comece com a "Imagem da Modelo".
-2.  Vista a modelo com a "Roupa (Topo)".
-`;
-
     const promptParts: any[] = [
-      { media: { url: modelPhotoDataUri } },
-      { media: { url: garmentPhotoDataUri } },
-    ];
-
-    if (pantsPhotoDataUri) {
-      promptText += '3. Adicione a "Calça".\n';
-      promptParts.push({ media: { url: pantsPhotoDataUri } });
-    }
-    if (coldWeatherPhotoDataUri) {
-      promptText += '4. Se for um casaco ou jaqueta, coloque-o sobre a "Roupa (Topo)".\n';
-      promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
-    }
-    if (shoesPhotoDataUri) {
-      promptText += '5. Calce os "Sapatos" na modelo.\n';
-      promptParts.push({ media: { url: shoesPhotoDataUri } });
-    }
-    if (necklacePhotoDataUri) {
-      promptText += '6. Adicione o "Acessório" (colar, etc.) de forma visível.\n';
-      promptParts.push({ media: { url: necklacePhotoDataUri } });
-    }
-
-    promptText += `
-Requisitos Finais:
-- O resultado deve ser uma ÚNICA imagem da modelo com o look completo, mantendo o rosto e corpo originais.
-- O look deve ser harmonioso, realista e bem ajustado. Mantenha as proporções corretas.
-- A imagem final deve ser fotorrealista e de alta qualidade.
-- Use estes guias para refinar o resultado:
-  - Guia Positivo (Siga estas dicas): ${positivePrompt}
-  - Guia Negativo (Evite estritamente isso): ${negativePrompt}
-`;
-
-    if (customStylePrompt) {
-        promptText += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
-    }
-
-    promptText += `
-Imagens de Referência:
-- Imagem da Modelo: (primeira imagem)
-- Roupa (Topo): (segunda imagem)
-`;
-
-    let imageCounter = 2;
-    if (pantsPhotoDataUri) promptText += `- Calça: (imagem ${++imageCounter})\n`;
-    if (coldWeatherPhotoDataUri) promptText += `- Casaco/Jaqueta: (imagem ${++imageCounter})\n`;
-    if (shoesPhotoDataUri) promptText += `- Sapatos: (imagem ${++imageCounter})\n`;
-    if (necklacePhotoDataUri) promptText += `- Acessório: (imagem ${++imageCounter})\n`;
-
-    promptParts.unshift({ text: promptText });
+        { text: "Vista a modelo da primeira imagem com as roupas das imagens seguintes. REGRA MAIS IMPORTANTE: MANTENHA O ROSTO, CORPO E CABELO DA MODELO ORIGINAL INTACTOS. Apenas troque as roupas." },
+        { media: { url: modelPhotoDataUri } },
+        { text: "Esta é a blusa para vestir na modelo." },
+        { media: { url: garmentPhotoDataUri } },
+      ];
+  
+      if (pantsPhotoDataUri) {
+        promptParts.push({ text: "Use estas calças." });
+        promptParts.push({ media: { url: pantsPhotoDataUri } });
+      }
+      if (coldWeatherPhotoDataUri) {
+        promptParts.push({ text: "Adicione este casaco por cima da blusa." });
+        promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
+      }
+      if (shoesPhotoDataUri) {
+        promptParts.push({ text: "Use estes sapatos." });
+        promptParts.push({ media: { url: shoesPhotoDataUri } });
+      }
+      if (necklacePhotoDataUri) {
+        promptParts.push({ text: "Adicione este acessório." });
+        promptParts.push({ media: { url: necklacePhotoDataUri } });
+      }
+  
+      let finalInstructions = `
+  Requisitos Finais:
+  - O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da modelo original com o look completo.
+  - O look deve ser harmonioso e bem ajustado.
+  - Use estes guias para refinar o resultado:
+    - Guia Positivo (Siga estas dicas): ${positivePrompt}
+    - Guia Negativo (Evite estritamente isso): ${negativePrompt}
+  `;
+  
+      if (customStylePrompt) {
+          finalInstructions += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
+      }
+  
+      promptParts.push({ text: finalInstructions });
 
 
     const { media } = await ai.generate({
