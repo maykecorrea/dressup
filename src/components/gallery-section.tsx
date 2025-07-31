@@ -1,9 +1,10 @@
+
 'use client';
 
 import { getGalleryImages, deleteImage } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical } from "lucide-react";
+import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,8 +23,11 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef, MouseEvent as ReactMouseEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Slider } from "./ui/slider";
+import { cn } from "@/lib/utils";
+
 
 type GallerySectionProps = {
     showBackButton?: boolean;
@@ -35,8 +39,13 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
     const [isDeleting, startDeleteTransition] = useTransition();
     const { toast } = useToast();
 
-    // Key to force re-render
-    const [galleryKey, setGalleryKey] = useState(Date.now());
+    // Zoom state
+    const [zoom, setZoom] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
+    const imageRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         const fetchImages = async () => {
@@ -46,7 +55,7 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
             setIsLoading(false);
         };
         fetchImages();
-    }, [galleryKey]);
+    }, []);
 
     const handleDelete = async (imageUrl: string) => {
         startDeleteTransition(async () => {
@@ -66,6 +75,39 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
             }
         });
     };
+
+    const resetZoomAndPosition = () => {
+        setZoom(1);
+        setPosition({ x: 0, y: 0 });
+    };
+
+    const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (zoom > 1) {
+            setIsDragging(true);
+            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (isDragging && imageRef.current) {
+            const newX = e.clientX - startDrag.x;
+            const newY = e.clientY - startDrag.y;
+            setPosition({ x: newX, y: newY });
+        }
+    };
+
+    const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
 
     if (isLoading) {
         return (
@@ -113,14 +155,54 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
                                     className="aspect-[4/5] object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                   <Dialog>
+                                   <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
                                         <DialogTrigger asChild>
                                             <Button variant="outline" size="icon" className="text-white border-white hover:bg-white/20">
                                                 <Eye className="h-5 w-5" />
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-4xl h-auto p-2 bg-background/80 backdrop-blur-sm">
-                                             <Image src={src} alt={`Look Gerado ${index + 1}`} width={1024} height={1280} className="w-full h-auto object-contain" />
+                                        <DialogContent
+                                            className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
+                                            onInteractOutside={(e) => e.preventDefault()}
+                                        >
+                                            <div
+                                                className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
+                                                onMouseDown={handleMouseDown}
+                                                onMouseMove={handleMouseMove}
+                                                onMouseUp={handleMouseUp}
+                                                onMouseLeave={handleMouseLeave}
+                                            >
+                                                <div
+                                                    ref={imageRef}
+                                                    className={cn(
+                                                        "relative transition-transform duration-200",
+                                                        isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                                                    )}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                                                    }}
+                                                >
+                                                    <Image
+                                                        src={src}
+                                                        alt={`Look Gerado ${index + 1}`}
+                                                        layout="fill"
+                                                        objectFit="contain"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <ZoomOut className="h-6 w-6 text-muted-foreground" />
+                                                <Slider
+                                                    value={[zoom]}
+                                                    min={0.5}
+                                                    max={2}
+                                                    step={0.1}
+                                                    onValueChange={(value) => setZoom(value[0])}
+                                                />
+                                                <ZoomIn className="h-6 w-6 text-muted-foreground" />
+                                            </div>
                                         </DialogContent>
                                     </Dialog>
                                     <Button asChild variant="outline" size="icon" className="text-white border-white hover:bg-white/20">
