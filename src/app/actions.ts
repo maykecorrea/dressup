@@ -4,6 +4,7 @@ import { generateVirtualDressUp } from '@/ai/flows/generate-virtual-dress-up';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
@@ -59,7 +60,8 @@ export async function saveImageToGallery(values: z.infer<typeof SaveImageInputSc
         const filepath = path.join(uploadsDir, filename);
 
         await fs.promises.writeFile(filepath, imageBuffer);
-
+        
+        revalidatePath('/gallery');
         return { success: true, message: 'Imagem salva na galeria!' };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao salvar a imagem.';
@@ -86,4 +88,39 @@ export async function getGalleryImages() {
     console.error("Error reading gallery images:", error);
     return [];
   }
+}
+
+const DeleteImageInputSchema = z.object({
+    imageUrl: z.string().min(1, 'O caminho da imagem é obrigatório.'),
+});
+
+export async function deleteImage(values: z.infer<typeof DeleteImageInputSchema>) {
+    const validatedFields = DeleteImageInputSchema.safeParse(values);
+    if (!validatedFields.success) {
+        return { success: false, error: 'Dados inválidos.' };
+    }
+
+    try {
+        const { imageUrl } = validatedFields.data;
+        const filename = path.basename(imageUrl);
+        const uploadsDir = path.join(process.cwd(), 'public/uploads');
+        const filepath = path.join(uploadsDir, filename);
+
+        // Security check: ensure the file is within the uploads directory
+        if (path.dirname(filepath) !== uploadsDir) {
+            return { success: false, error: 'Caminho de arquivo inválido.' };
+        }
+
+        if (fs.existsSync(filepath)) {
+            await fs.promises.unlink(filepath);
+            revalidatePath('/gallery');
+            return { success: true, message: 'Imagem excluída com sucesso!' };
+        } else {
+            return { success: false, error: 'Imagem não encontrada.' };
+        }
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao excluir a imagem.';
+        return { success: false, error: errorMessage };
+    }
 }
