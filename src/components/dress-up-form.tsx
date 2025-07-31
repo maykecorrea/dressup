@@ -296,7 +296,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Roupa (Topo)" icon={<Shirt />} />
                   <ImageUpload fieldName="pantsPhotoDataUri" preview={pantsPreview} label="Calça (Opcional)" icon={<PantsIcon />} />
                   <ImageUpload fieldName="coldWeatherPhotoDataUri" preview={coldWeatherPreview} label="Casaco (Opcional)" icon={<Snowflake />} />
@@ -431,7 +431,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                     <Button 
                       onClick={handleDownload}
-                      className="w-full font-bold bg-gradient-to-r from-primary via-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
+                      className="w-full font-bold bg-gradient-to-r from-primary via-secondary to-primary/80 text-secondary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
                       size="lg"
                     >
                       <Download className="mr-2 h-5 w-5" />
@@ -448,7 +448,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     </Button>
                      <Button 
                       onClick={handleUseAsBase}
-                      className="w-full font-bold bg-gradient-to-r from-yellow-500 via-red-500 to-pink-600 text-white hover:shadow-lg hover:scale-105 transition-transform lg:col-span-1 sm:col-span-2" 
+                      className="w-full font-bold bg-gradient-to-r from-yellow-500 via-red-500 to-pink-600 text-secondary-foreground hover:shadow-lg hover:scale-105 transition-transform lg:col-span-1 sm:col-span-2" 
                       size="lg"
                     >
                       <RefreshCw className="mr-2 h-5 w-5" />
@@ -462,3 +462,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
+
+    
