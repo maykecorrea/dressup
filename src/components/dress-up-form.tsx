@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save, PencilLine, Move } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save, PencilLine, Move, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -192,6 +192,17 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         title: 'Erro ao Salvar',
         description: result.error || 'Não foi possível salvar a imagem.',
         variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUseAsBase = () => {
+    if (generatedImage) {
+      form.setValue('modelPhotoDataUri', generatedImage);
+      setModelPreview(generatedImage);
+      toast({
+        title: 'Imagem Definida!',
+        description: 'O resultado anterior agora é a imagem base para um novo look.',
       });
     }
   };
@@ -417,14 +428,14 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
               )}
             </div>
              {generatedImage && !isLoading && (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                     <Button 
                       onClick={handleDownload}
                       className="w-full font-bold bg-gradient-to-r from-primary via-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
                       size="lg"
                     >
                       <Download className="mr-2 h-5 w-5" />
-                      Baixar Obra Prima!
+                      Baixar
                     </Button>
                     <Button 
                       onClick={handleSaveToGallery}
@@ -433,7 +444,15 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                       size="lg"
                     >
                       {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-                      {isSaving ? 'Salvando...' : 'Salvar na Galeria'}
+                      {isSaving ? 'Salvando...' : 'Salvar'}
+                    </Button>
+                     <Button 
+                      onClick={handleUseAsBase}
+                      className="w-full font-bold bg-gradient-to-r from-yellow-500 via-red-500 to-pink-600 text-white hover:shadow-lg hover:scale-105 transition-transform lg:col-span-1 sm:col-span-2" 
+                      size="lg"
+                    >
+                      <RefreshCw className="mr-2 h-5 w-5" />
+                      Usar como Base
                     </Button>
                  </div>
               )}
@@ -443,5 +462,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
-
-    
