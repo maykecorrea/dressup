@@ -191,6 +191,7 @@ export function DressUpForm() {
   };
 
     const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
         if (zoom > 1) {
             setIsDragging(true);
             setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
@@ -198,6 +199,7 @@ export function DressUpForm() {
     };
 
     const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
         if (isDragging && imageRef.current) {
             const newX = e.clientX - startDrag.x;
             const newY = e.clientY - startDrag.y;
@@ -205,11 +207,13 @@ export function DressUpForm() {
         }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
         setIsDragging(false);
     };
-
-    const handleMouseLeave = () => {
+    
+    const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
         setIsDragging(false);
     };
 
@@ -325,28 +329,36 @@ export function DressUpForm() {
                          <ZoomIn className="h-6 w-6" />
                        </Button>
                      </DialogTrigger>
-                     <DialogContent className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4">
+                     <DialogContent 
+                        className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
+                        onInteractOutside={(e) => e.preventDefault()}
+                      >
                         <div 
-                          className="w-full h-[75vh] overflow-hidden relative"
+                          className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
                           onMouseDown={handleMouseDown}
                           onMouseMove={handleMouseMove}
                           onMouseUp={handleMouseUp}
                           onMouseLeave={handleMouseLeave}
                         >
-                          <Image 
+                          <div
                             ref={imageRef}
-                            src={generatedImage} 
-                            alt="Look gerado em zoom" 
-                            layout="fill"
-                            objectFit="contain" 
                             className={cn(
-                              "transition-transform duration-200",
+                              "relative transition-transform duration-200",
                               isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
                             )}
                             style={{
+                                width: '100%',
+                                height: '100%',
                                 transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
                             }}
-                          />
+                          >
+                            <Image 
+                              src={generatedImage} 
+                              alt="Look gerado em zoom" 
+                              layout="fill"
+                              objectFit="contain" 
+                            />
+                          </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <ZoomOut className="h-6 w-6 text-muted-foreground" />
