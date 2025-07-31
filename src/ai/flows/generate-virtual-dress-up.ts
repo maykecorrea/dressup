@@ -85,6 +85,8 @@ const generateVirtualDressUpFlow = ai.defineFlow(
     // Base prompt text
     let promptText = `Tarefa: Você é um assistente de IA especialista em moda. Sua tarefa é vestir a modelo da "Imagem da Modelo" com um look completo usando as peças fornecidas. É crucial que você SUBSTITUA TODAS as roupas que a modelo está vestindo pelas novas peças.
 
+REGRA MAIS IMPORTANTE: MANTENHA O ROSTO E O CORPO DA MODELO ORIGINAL. O rosto, cabelo e características físicas da modelo na "Imagem da Modelo" NÃO DEVEM SER ALTERADOS. Apenas as roupas devem ser trocadas.
+
 Instruções passo a passo:
 1.  Comece com a "Imagem da Modelo".
 2.  Vista a modelo com a "Roupa (Topo)".
@@ -114,7 +116,7 @@ Instruções passo a passo:
 
     promptText += `
 Requisitos Finais:
-- O resultado deve ser uma ÚNICA imagem da modelo com o look completo.
+- O resultado deve ser uma ÚNICA imagem da modelo com o look completo, mantendo o rosto e corpo originais.
 - O look deve ser harmonioso, realista e bem ajustado. Mantenha as proporções corretas.
 - A imagem final deve ser fotorrealista e de alta qualidade.
 - Use estes guias para refinar o resultado:
