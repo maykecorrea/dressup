@@ -349,7 +349,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </div>
               ) : generatedImage ? (
                 <>
-                  <Image src={generatedImage} alt="Look gerado" layout="fill" objectFit="contain" className="object-contain w-full h-full" data-ai-hint="fashion model full body" />
+                  <Image src={generatedImage} alt="Look gerado" layout="fill" objectFit="contain" className="p-2" data-ai-hint="fashion model full body" />
                   <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
                      <DialogTrigger asChild>
                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 text-white hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
@@ -437,3 +437,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
+
+    

@@ -4,7 +4,7 @@
 import { getGalleryImages } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut, Rocket } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -132,13 +132,15 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                         {images.map((src, index) => (
                             <Card key={`${src}-${index}`} className="overflow-hidden group relative">
                                 <CardContent className="p-0">
-                                    <Image
-                                        src={src}
-                                        alt={`Look Gerado ${index + 1}`}
-                                        width={400}
-                                        height={500}
-                                        className="aspect-[4/5] object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
-                                    />
+                                    <div className="aspect-[4/5] w-full bg-muted/20 flex items-center justify-center">
+                                        <Image
+                                            src={src}
+                                            alt={`Look Gerado ${index + 1}`}
+                                            width={400}
+                                            height={500}
+                                            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-105 p-2"
+                                        />
+                                    </div>
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
                                             <Tooltip>
@@ -255,3 +257,5 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
         </TooltipProvider>
     );
 }
+
+    

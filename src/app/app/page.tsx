@@ -2,7 +2,7 @@
 'use client';
 
 import { DressUpForm } from '@/components/dress-up-form';
-import { Info, Lightbulb, Shirt, ThumbsUp, GalleryVertical } from 'lucide-react';
+import { Info, Lightbulb, Shirt, ThumbsUp, GalleryVertical, Rocket } from 'lucide-react';
 import withAuth from '@/components/with-auth';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -97,11 +97,16 @@ function AppPage() {
         showBackButton={false} 
       />
 
-      <div className="text-center mt-16 text-muted-foreground">
-        <p>Em breve, mais novidades!</p>
+      <div className="mt-16 text-center">
+          <div className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary/10 via-muted to-secondary/10 px-6 py-3 shadow-lg">
+              <Rocket className="h-6 w-6 text-secondary animate-pulse" />
+              <p className="font-semibold text-muted-foreground tracking-wide">Em breve, mais novidades!</p>
+          </div>
       </div>
     </main>
   );
 }
 
 export default withAuth(AppPage);
+
+    
