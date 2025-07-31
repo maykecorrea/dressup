@@ -22,6 +22,12 @@ const GenerateVirtualDressUpInputSchema = z.object({
     .describe(
       "A photo of the main garment, as a data URI that must include a MIME type and use Base64 encoding."
     ),
+  pantsPhotoDataUri: z
+    .string()
+    .optional()
+    .describe(
+        "Optional: A photo of pants, as a data URI."
+    ),
   shoesPhotoDataUri: z
     .string()
     .optional()
@@ -66,6 +72,7 @@ const generateVirtualDressUpFlow = ai.defineFlow(
     const {
       modelPhotoDataUri,
       garmentPhotoDataUri,
+      pantsPhotoDataUri,
       shoesPhotoDataUri,
       necklacePhotoDataUri,
       coldWeatherPhotoDataUri,
@@ -76,10 +83,14 @@ const generateVirtualDressUpFlow = ai.defineFlow(
     const promptParts: any[] = [
       { media: { url: modelPhotoDataUri } },
       { text: "Você é um estilista de moda especialista. Sua tarefa é vestir a modelo da primeira imagem com as peças de roupa e acessórios fornecidos nas imagens seguintes para criar um look completo, coeso e estiloso." },
-      { text: "\nPeça Principal:" },
+      { text: "\nPeça Principal (Topo):" },
       { media: { url: garmentPhotoDataUri } },
     ];
 
+    if (pantsPhotoDataUri) {
+        promptParts.push({ text: "\nCalça:" });
+        promptParts.push({ media: { url: pantsPhotoDataUri } });
+    }
     if (coldWeatherPhotoDataUri) {
         promptParts.push({ text: "\nCasaco/Jaqueta:" });
         promptParts.push({ media: { url: coldWeatherPhotoDataUri } });

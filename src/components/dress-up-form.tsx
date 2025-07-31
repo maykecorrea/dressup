@@ -17,9 +17,21 @@ import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
+// Custom Pants Icon
+const PantsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-person-standing">
+        <path d="M12 21a4.62 4.62 0 0 0-1.8-3.5c-1.3-1-2.2-2-2.2-3.5a4 4 0 1 1 8 0c0 1.5-.9 2.5-2.2 3.5A4.62 4.62 0 0 0 12 21z"/>
+        <path d="M12 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+        <path d="M12 14v7"/>
+        <path d="M9 14v7"/>
+        <path d="M15 14v7"/>
+    </svg>
+  );
+
 const formSchema = z.object({
   modelPhotoDataUri: z.string().min(1, { message: 'Por favor, envie uma imagem do modelo.' }),
   garmentPhotoDataUri: z.string().min(1, { message: 'A imagem da roupa principal é obrigatória.' }),
+  pantsPhotoDataUri: z.string().optional(),
   shoesPhotoDataUri: z.string().optional(),
   necklacePhotoDataUri: z.string().optional(),
   coldWeatherPhotoDataUri: z.string().optional(),
@@ -36,6 +48,7 @@ export function DressUpForm() {
   const { toast } = useToast();
   const [modelPreview, setModelPreview] = useState<string | null>(null);
   const [garmentPreview, setGarmentPreview] = useState<string | null>(null);
+  const [pantsPreview, setPantsPreview] = useState<string | null>(null);
   const [shoesPreview, setShoesPreview] = useState<string | null>(null);
   const [necklacePreview, setNecklacePreview] = useState<string | null>(null);
   const [coldWeatherPreview, setColdWeatherPreview] = useState<string | null>(null);
@@ -49,6 +62,7 @@ export function DressUpForm() {
     defaultValues: {
       modelPhotoDataUri: '',
       garmentPhotoDataUri: '',
+      pantsPhotoDataUri: '',
       shoesPhotoDataUri: '',
       necklacePhotoDataUri: '',
       coldWeatherPhotoDataUri: '',
@@ -90,6 +104,9 @@ export function DressUpForm() {
                 break;
             case 'garmentPhotoDataUri':
                 setGarmentPreview(dataUri);
+                break;
+            case 'pantsPhotoDataUri':
+                setPantsPreview(dataUri);
                 break;
             case 'shoesPhotoDataUri':
                 setShoesPreview(dataUri);
@@ -192,14 +209,19 @@ export function DressUpForm() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="sm:col-span-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="sm:col-span-2">
                     <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
                   </div>
-                  <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Roupa Principal" icon={<Shirt />} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Roupa (Topo)" icon={<Shirt />} />
+                  <ImageUpload fieldName="pantsPhotoDataUri" preview={pantsPreview} label="Calça (Opcional)" icon={<PantsIcon />} />
                   <ImageUpload fieldName="coldWeatherPhotoDataUri" preview={coldWeatherPreview} label="Casaco (Opcional)" icon={<Snowflake />} />
                   <ImageUpload fieldName="shoesPhotoDataUri" preview={shoesPreview} label="Sapatos (Opcional)" icon={<Footprints />} />
-                  <ImageUpload fieldName="necklacePhotoDataUri" preview={necklacePreview} label="Acessório (Opcional)" icon={<Gem />} />
+                  <div className="lg:col-span-2">
+                    <ImageUpload fieldName="necklacePhotoDataUri" preview={necklacePreview} label="Acessório (Opcional)" icon={<Gem />} />
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>

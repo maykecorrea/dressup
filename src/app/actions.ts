@@ -6,6 +6,7 @@ import { z } from 'zod';
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
   garmentPhotoDataUri: z.string().min(1, 'A imagem da roupa principal é obrigatória.'),
+  pantsPhotoDataUri: z.string().optional(),
   shoesPhotoDataUri: z.string().optional(),
   necklacePhotoDataUri: z.string().optional(),
   coldWeatherPhotoDataUri: z.string().optional(),
