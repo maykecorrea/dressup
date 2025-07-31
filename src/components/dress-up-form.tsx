@@ -22,12 +22,10 @@ import { cn } from '@/lib/utils';
 
 // Custom Pants Icon
 const PantsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-person-standing">
-        <path d="M12 21a4.62 4.62 0 0 0-1.8-3.5c-1.3-1-2.2-2-2.2-3.5a4 4 0 1 1 8 0c0 1.5-.9 2.5-2.2 3.5A4.62 4.62 0 0 0 12 21z"/>
-        <path d="M12 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-        <path d="M12 14v7"/>
-        <path d="M9 14v7"/>
-        <path d="M15 14v7"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pants">
+      <path d="M12 2v7.5"/>
+      <path d="M12 21a4.5 4.5 0 0 0-3-4H6a2 2 0 0 1-2-2V9.5"/>
+      <path d="M12 21a4.5 4.5 0 0 1 3-4h3a2 2 0 0 0 2-2V9.5"/>
     </svg>
   );
 
@@ -279,12 +277,12 @@ export function DressUpForm() {
                     <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <ImageUpload fieldName="garmentPhotoDataUri" preview={garmentPreview} label="Roupa (Topo)" icon={<Shirt />} />
                   <ImageUpload fieldName="pantsPhotoDataUri" preview={pantsPreview} label="Calça (Opcional)" icon={<PantsIcon />} />
                   <ImageUpload fieldName="coldWeatherPhotoDataUri" preview={coldWeatherPreview} label="Casaco (Opcional)" icon={<Snowflake />} />
                   <ImageUpload fieldName="shoesPhotoDataUri" preview={shoesPreview} label="Sapatos (Opcional)" icon={<Footprints />} />
-                  <div className="lg:col-span-2">
+                  <div className="col-span-2">
                     <ImageUpload fieldName="necklacePhotoDataUri" preview={necklacePreview} label="Acessório (Opcional)" icon={<Gem />} />
                   </div>
                 </div>
@@ -410,5 +408,7 @@ export function DressUpForm() {
     </>
   );
 }
+
+    
 
     
