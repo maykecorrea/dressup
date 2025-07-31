@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save, PencilLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -19,6 +19,7 @@ import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 // Custom Pants Icon
 const PantsIcon = () => (
@@ -38,6 +39,7 @@ const formSchema = z.object({
   coldWeatherPhotoDataUri: z.string().optional(),
   positivePrompt: z.string(),
   negativePrompt: z.string(),
+  customStylePrompt: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -77,6 +79,7 @@ export function DressUpForm() {
       coldWeatherPhotoDataUri: '',
       positivePrompt: defaultPositivePrompts,
       negativePrompt: defaultNegativePrompts,
+      customStylePrompt: '',
     },
   });
 
@@ -282,8 +285,29 @@ export function DressUpForm() {
                   <ImageUpload fieldName="pantsPhotoDataUri" preview={pantsPreview} label="Calça (Opcional)" icon={<PantsIcon />} />
                   <ImageUpload fieldName="coldWeatherPhotoDataUri" preview={coldWeatherPreview} label="Casaco (Opcional)" icon={<Snowflake />} />
                   <ImageUpload fieldName="shoesPhotoDataUri" preview={shoesPreview} label="Sapatos (Opcional)" icon={<Footprints />} />
-                  <div className="col-span-2">
+                
+                  <div className="col-span-2 md:col-span-2">
                     <ImageUpload fieldName="necklacePhotoDataUri" preview={necklacePreview} label="Acessório (Opcional)" icon={<Gem />} />
+                  </div>
+
+                  <div className="col-span-2 md:col-span-2">
+                     <FormField
+                        control={form.control}
+                        name="customStylePrompt"
+                        render={({ field }) => (
+                          <FormItem className="h-full flex flex-col">
+                            <FormLabel className="flex items-center gap-2 text-lg font-semibold"><div className="text-secondary"><PencilLine /></div>Estilo Personalizado</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                    placeholder="Ex: cabelo loiro, maquiagem leve, fundo de estúdio"
+                                    className="resize-none flex-grow"
+                                    {...field}
+                                    />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                   </div>
                 </div>
               </CardContent>

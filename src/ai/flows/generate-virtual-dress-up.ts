@@ -48,6 +48,7 @@ const GenerateVirtualDressUpInputSchema = z.object({
     ),
   positivePrompt: z.string().describe('Positive prompts to refine the garment style and integration.'),
   negativePrompt: z.string().describe('Negative prompts to prevent undesirable characteristics.'),
+  customStylePrompt: z.string().optional().describe('Custom user-defined prompts for additional styling, like hair, makeup, or background.'),
 });
 export type GenerateVirtualDressUpInput = z.infer<typeof GenerateVirtualDressUpInputSchema>;
 
@@ -78,6 +79,7 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       coldWeatherPhotoDataUri,
       positivePrompt,
       negativePrompt,
+      customStylePrompt,
     } = input;
     
     // Base prompt text
@@ -118,7 +120,13 @@ Requisitos Finais:
 - Use estes guias para refinar o resultado:
   - Guia Positivo (Siga estas dicas): ${positivePrompt}
   - Guia Negativo (Evite estritamente isso): ${negativePrompt}
+`;
 
+    if (customStylePrompt) {
+        promptText += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
+    }
+
+    promptText += `
 Imagens de Referência:
 - Imagem da Modelo: (primeira imagem)
 - Roupa (Topo): (segunda imagem)

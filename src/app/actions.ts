@@ -15,6 +15,7 @@ const ActionInputSchema = z.object({
   coldWeatherPhotoDataUri: z.string().optional(),
   positivePrompt: z.string(),
   negativePrompt: z.string(),
+  customStylePrompt: z.string().optional(),
 });
 
 export async function performDressUp(values: z.infer<typeof ActionInputSchema>) {
