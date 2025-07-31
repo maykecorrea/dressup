@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { performDressUp, saveImageToGallery } from '@/app/actions';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -333,6 +333,7 @@ export function DressUpForm() {
                         className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
                         onInteractOutside={(e) => e.preventDefault()}
                       >
+                        <DialogTitle className="sr-only">Zoom na Imagem do Look Gerado</DialogTitle>
                         <div 
                           className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
                           onMouseDown={handleMouseDown}

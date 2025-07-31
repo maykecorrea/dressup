@@ -10,6 +10,7 @@ import Link from "next/link";
 import {
     Dialog,
     DialogContent,
+    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -165,6 +166,7 @@ export function GallerySection({ showBackButton = true }: GallerySectionProps) {
                                             className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
                                             onInteractOutside={(e) => e.preventDefault()}
                                         >
+                                            <DialogTitle className="sr-only">Zoom na Imagem da Galeria</DialogTitle>
                                             <div
                                                 className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
                                                 onMouseDown={handleMouseDown}
