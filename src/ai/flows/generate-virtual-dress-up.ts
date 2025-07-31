@@ -79,35 +79,58 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       positivePrompt,
       negativePrompt,
     } = input;
+    
+    // Base prompt text
+    let promptText = `Tarefa: Você é um assistente de IA especialista em moda. Sua tarefa é vestir a modelo da "Imagem da Modelo" com um look completo usando as peças fornecidas. É crucial que você SUBSTITUA TODAS as roupas que a modelo está vestindo pelas novas peças.
+
+Instruções passo a passo:
+1.  Comece com a "Imagem da Modelo".
+2.  Vista a modelo com a "Roupa (Topo)".
+`;
 
     const promptParts: any[] = [
       { media: { url: modelPhotoDataUri } },
-      { text: "Você é um estilista de moda especialista. Sua tarefa é vestir a modelo da primeira imagem com as peças de roupa e acessórios fornecidos nas imagens seguintes para criar um look completo, coeso e estiloso." },
-      { text: "\nPeça Principal (Topo):" },
       { media: { url: garmentPhotoDataUri } },
     ];
 
     if (pantsPhotoDataUri) {
-        promptParts.push({ text: "\nCalça:" });
-        promptParts.push({ media: { url: pantsPhotoDataUri } });
+      promptText += '3. Adicione a "Calça".\n';
+      promptParts.push({ media: { url: pantsPhotoDataUri } });
     }
     if (coldWeatherPhotoDataUri) {
-        promptParts.push({ text: "\nCasaco/Jaqueta:" });
-        promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
+      promptText += '4. Se for um casaco ou jaqueta, coloque-o sobre a "Roupa (Topo)".\n';
+      promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
     }
     if (shoesPhotoDataUri) {
-        promptParts.push({ text: "\nSapatos:" });
-        promptParts.push({ media: { url: shoesPhotoDataUri } });
+      promptText += '5. Calce os "Sapatos" na modelo.\n';
+      promptParts.push({ media: { url: shoesPhotoDataUri } });
     }
     if (necklacePhotoDataUri) {
-        promptParts.push({ text: "\nAcessório (Colar/etc):" });
-        promptParts.push({ media: { url: necklacePhotoDataUri } });
+      promptText += '6. Adicione o "Acessório" (colar, etc.) de forma visível.\n';
+      promptParts.push({ media: { url: necklacePhotoDataUri } });
     }
-    
-    promptParts.push({ text: `\nInstruções Adicionais: Vista a modelo com todas as peças fornecidas, garantindo que o resultado final seja uma imagem única, fotorealista e de alta qualidade. O look deve parecer natural e bem ajustado ao corpo da modelo. Considere o estilo de todas as peças para criar uma composição harmoniosa.`});
-    promptParts.push({ text: `\nPrompts Positivos (use como guia): ${positivePrompt}` });
-    promptParts.push({ text: `\nPrompts Negativos (evite estritamente): ${negativePrompt}` });
-    promptParts.push({ text: `\nRetorne apenas a imagem final da modelo com o look completo.` });
+
+    promptText += `
+Requisitos Finais:
+- O resultado deve ser uma ÚNICA imagem da modelo com o look completo.
+- O look deve ser harmonioso, realista e bem ajustado. Mantenha as proporções corretas.
+- A imagem final deve ser fotorrealista e de alta qualidade.
+- Use estes guias para refinar o resultado:
+  - Guia Positivo (Siga estas dicas): ${positivePrompt}
+  - Guia Negativo (Evite estritamente isso): ${negativePrompt}
+
+Imagens de Referência:
+- Imagem da Modelo: (primeira imagem)
+- Roupa (Topo): (segunda imagem)
+`;
+
+    let imageCounter = 2;
+    if (pantsPhotoDataUri) promptText += `- Calça: (imagem ${++imageCounter})\n`;
+    if (coldWeatherPhotoDataUri) promptText += `- Casaco/Jaqueta: (imagem ${++imageCounter})\n`;
+    if (shoesPhotoDataUri) promptText += `- Sapatos: (imagem ${++imageCounter})\n`;
+    if (necklacePhotoDataUri) promptText += `- Acessório: (imagem ${++imageCounter})\n`;
+
+    promptParts.unshift({ text: promptText });
 
 
     const { media } = await ai.generate({
