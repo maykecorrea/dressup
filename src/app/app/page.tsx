@@ -1,3 +1,4 @@
+
 'use client';
 
 import { DressUpForm } from '@/components/dress-up-form';
@@ -5,6 +6,8 @@ import { Info, Lightbulb, Shirt, ThumbsUp, GalleryVertical } from 'lucide-react'
 import withAuth from '@/components/with-auth';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { GallerySection } from '@/components/gallery-section';
+import { Separator } from '@/components/ui/separator';
 
 function AppPage() {
   return (
@@ -21,7 +24,7 @@ function AppPage() {
             <Button asChild className="bg-gradient-to-r from-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform">
               <Link href="/gallery">
                 <GalleryVertical className="mr-2" />
-                Ver Galeria de Looks
+                Ver Galeria de Looks Completa
               </Link>
             </Button>
           </div>
@@ -52,6 +55,11 @@ function AppPage() {
       </div>
       
       <DressUpForm />
+
+      <Separator className="my-12" />
+
+      <GallerySection showBackButton={false} />
+
     </main>
   );
 }
