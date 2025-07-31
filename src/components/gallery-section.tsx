@@ -4,7 +4,7 @@
 import { getGalleryImages } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut, Rocket } from "lucide-react";
+import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut, Rocket, Move } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -187,16 +187,22 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                                                         />
                                                     </div>
                                                 </div>
+                                                {zoom > 1 && (
+                                                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
+                                                        <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
+                                                        <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-4">
                                                     <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))} />
                                                     <Slider
                                                         value={[zoom]}
                                                         min={0.5}
-                                                        max={2}
+                                                        max={3}
                                                         step={0.1}
                                                         onValueChange={(value) => setZoom(value[0])}
                                                     />
-                                                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.min(2, prev + 0.1))} />
+                                                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.min(3, prev + 0.1))} />
                                                 </div>
                                             </DialogContent>
                                         </Dialog>
