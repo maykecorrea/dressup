@@ -1,11 +1,12 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, MouseEvent as ReactMouseEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, Footprints, Gem, Snowflake } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -16,6 +17,8 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
 
 // Custom Pants Icon
 const PantsIcon = () => (
@@ -42,7 +45,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
-const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhados, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos";
+const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhadas, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos";
 
 export function DressUpForm() {
   const { toast } = useToast();
@@ -56,6 +59,13 @@ export function DressUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = getAuth(app);
+
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -156,6 +166,34 @@ export function DressUpForm() {
       document.body.removeChild(link);
     }
   };
+
+    const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (zoom > 1) {
+            setIsDragging(true);
+            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (isDragging && imageRef.current) {
+            const newX = e.clientX - startDrag.x;
+            const newY = e.clientY - startDrag.y;
+            setPosition({ x: newX, y: newY });
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+    };
+
+    const resetZoomAndPosition = () => {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+    }
 
   const ImageUpload = ({ fieldName, preview, label, icon }: { fieldName: keyof FormValues, preview: string | null, label: string, icon: React.ReactNode }) => (
     <FormField
@@ -258,14 +296,46 @@ export function DressUpForm() {
               ) : generatedImage ? (
                 <>
                   <Image src={generatedImage} alt="Look gerado" layout="fill" objectFit="contain" className="object-contain w-full h-full" data-ai-hint="fashion model full body" />
-                  <Dialog>
+                  <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
                      <DialogTrigger asChild>
                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 text-white hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                          <ZoomIn className="h-6 w-6" />
                        </Button>
                      </DialogTrigger>
-                     <DialogContent className="max-w-4xl h-auto p-2 bg-background/80 backdrop-blur-sm">
-                        <Image src={generatedImage} alt="Look gerado em zoom" width={1200} height={1500} className="rounded-md object-contain w-full h-full" />
+                     <DialogContent className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4">
+                        <div 
+                          className="w-full h-[75vh] overflow-hidden relative"
+                          onMouseDown={handleMouseDown}
+                          onMouseMove={handleMouseMove}
+                          onMouseUp={handleMouseUp}
+                          onMouseLeave={handleMouseLeave}
+                        >
+                          <Image 
+                            ref={imageRef}
+                            src={generatedImage} 
+                            alt="Look gerado em zoom" 
+                            layout="fill"
+                            objectFit="contain" 
+                            className={cn(
+                              "transition-transform duration-200",
+                              isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                            )}
+                            style={{
+                                transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <ZoomOut className="h-6 w-6 text-muted-foreground" />
+                            <Slider
+                                value={[zoom]}
+                                min={0.5}
+                                max={2}
+                                step={0.1}
+                                onValueChange={(value) => setZoom(value[0])}
+                            />
+                            <ZoomIn className="h-6 w-6 text-muted-foreground" />
+                        </div>
                      </DialogContent>
                   </Dialog>
                 </>
@@ -293,3 +363,5 @@ export function DressUpForm() {
     </>
   );
 }
+
+    
