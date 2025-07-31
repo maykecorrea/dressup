@@ -1,8 +1,10 @@
 'use client';
 
 import { DressUpForm } from '@/components/dress-up-form';
-import { Info, Lightbulb, Shirt, ThumbsUp } from 'lucide-react';
+import { Info, Lightbulb, Shirt, ThumbsUp, GalleryVertical } from 'lucide-react';
 import withAuth from '@/components/with-auth';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 function AppPage() {
   return (
@@ -15,6 +17,14 @@ function AppPage() {
         <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-lg">
           Experimente qualquer roupa virtualmente. Envie uma foto sua ou de um(a) modelo, selecione uma peça de roupa e deixe nossa IA criar o look perfeito.
         </p>
+         <div className="mt-6">
+            <Button asChild className="bg-gradient-to-r from-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform">
+              <Link href="/gallery">
+                <GalleryVertical className="mr-2" />
+                Ver Galeria de Looks
+              </Link>
+            </Button>
+          </div>
       </header>
 
       <div className="mb-12 p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card shadow-lg border border-primary/20">

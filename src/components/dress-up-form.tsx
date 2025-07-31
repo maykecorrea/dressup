@@ -6,13 +6,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { performDressUp } from '@/app/actions';
+import { performDressUp, saveImageToGallery } from '@/app/actions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -57,6 +57,7 @@ export function DressUpForm() {
   const [coldWeatherPreview, setColdWeatherPreview] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const auth = getAuth(app);
 
@@ -164,6 +165,28 @@ export function DressUpForm() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  const handleSaveToGallery = async () => {
+    if (!generatedImage) return;
+
+    setIsSaving(true);
+    const result = await saveImageToGallery({ imageDataUri: generatedImage });
+    setIsSaving(false);
+
+    if (result.success) {
+      toast({
+        title: 'Salvo!',
+        description: 'Seu look foi salvo na galeria.',
+        variant: 'default',
+      });
+    } else {
+      toast({
+        title: 'Erro ao Salvar',
+        description: result.error || 'Não foi possível salvar a imagem.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -348,14 +371,25 @@ export function DressUpForm() {
               )}
             </div>
              {generatedImage && !isLoading && (
-                <Button 
-                  onClick={handleDownload}
-                  className="w-full mt-4 font-bold bg-gradient-to-r from-primary via-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
-                  size="lg"
-                >
-                  <Download className="mr-2 h-5 w-5" />
-                  Baixar Obra Prima!
-                </Button>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <Button 
+                      onClick={handleDownload}
+                      className="w-full font-bold bg-gradient-to-r from-primary via-secondary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" 
+                      size="lg"
+                    >
+                      <Download className="mr-2 h-5 w-5" />
+                      Baixar Obra Prima!
+                    </Button>
+                    <Button 
+                      onClick={handleSaveToGallery}
+                      disabled={isSaving}
+                      className="w-full font-bold bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg hover:scale-105 transition-transform" 
+                      size="lg"
+                    >
+                      {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                      {isSaving ? 'Salvando...' : 'Salvar na Galeria'}
+                    </Button>
+                 </div>
               )}
           </CardContent>
         </Card>
