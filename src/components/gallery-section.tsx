@@ -1,7 +1,6 @@
 
 'use client';
 
-import { getGalleryImages } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Download, Eye, Trash2, Loader2, GalleryVertical, ZoomIn, ZoomOut, Rocket, Move } from "lucide-react";
@@ -32,14 +31,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 
 type GallerySectionProps = {
     showBackButton?: boolean;
-    images: string[];
-    setImages: React.Dispatch<React.SetStateAction<string[]>>;
-    onImageDeleted: (imageUrl: string) => void;
-    isDeleting: boolean;
+    onImageDeleted: () => void;
 }
 
-export function GallerySection({ showBackButton = true, images, setImages, onImageDeleted, isDeleting }: GallerySectionProps) {
+export function GallerySection({ showBackButton = true, onImageDeleted }: GallerySectionProps) {
+    const [images, setImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Zoom state
     const [zoom, setZoom] = useState(1);
@@ -50,14 +48,31 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
 
 
     useEffect(() => {
-        const fetchImages = async () => {
-            setIsLoading(true);
-            const fetchedImages = await getGalleryImages();
-            setImages(fetchedImages);
+        setIsLoading(true);
+        try {
+            const storedImages = JSON.parse(localStorage.getItem('virtual-dress-up-gallery') || '[]');
+            setImages(storedImages);
+        } catch (e) {
+            console.error("Failed to parse images from localStorage", e);
+            setImages([]);
+        } finally {
             setIsLoading(false);
-        };
-        fetchImages();
-    }, [setImages]);
+        }
+    }, []);
+
+    const handleDelete = (imageToDelete: string) => {
+        setIsDeleting(true);
+        try {
+            const newImages = images.filter(img => img !== imageToDelete);
+            localStorage.setItem('virtual-dress-up-gallery', JSON.stringify(newImages));
+            setImages(newImages);
+            onImageDeleted();
+        } catch (e) {
+            console.error("Failed to delete image from localStorage", e);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
 
     const resetZoomAndPosition = () => {
@@ -130,7 +145,7 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                 {images.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {images.map((src, index) => (
-                            <Card key={`${src}-${index}`} className="overflow-hidden group relative">
+                            <Card key={index} className="overflow-hidden group relative">
                                 <CardContent className="p-0">
                                     <div className="aspect-[4/5] w-full bg-muted/20 flex items-center justify-center">
                                         <Image
@@ -236,12 +251,12 @@ export function GallerySection({ showBackButton = true, images, setImages, onIma
                                                 <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                                                 <AlertDialogDescription>
                                                     Essa ação não pode ser desfeita. Isso excluirá permanentemente a imagem
-                                                    dos servidores.
+                                                    do armazenamento local do seu navegador.
                                                 </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => onImageDeleted(src)} disabled={isDeleting}>
+                                                <AlertDialogAction onClick={() => handleDelete(src)} disabled={isDeleting}>
                                                     {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                                     Sim, excluir imagem
                                                 </AlertDialogAction>

@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { performDressUp, saveImageToGallery } from '@/app/actions';
+import { performDressUp } from '@/app/actions';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -45,7 +45,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface DressUpFormProps {
-  onImageSaved: (imageUrl: string) => void;
+  onImageSaved: () => void;
 }
 
 const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
@@ -177,22 +177,25 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     if (!generatedImage) return;
 
     setIsSaving(true);
-    const result = await saveImageToGallery({ imageDataUri: generatedImage });
-    setIsSaving(false);
+    try {
+      const gallery = JSON.parse(localStorage.getItem('virtual-dress-up-gallery') || '[]');
+      gallery.unshift(generatedImage); // Add to the beginning
+      localStorage.setItem('virtual-dress-up-gallery', JSON.stringify(gallery));
 
-    if (result.success && result.imageUrl) {
       toast({
         title: 'Salvo!',
-        description: 'Seu look foi salvo na galeria.',
+        description: 'Seu look foi salvo na galeria local do navegador.',
         variant: 'default',
       });
-      onImageSaved(result.imageUrl);
-    } else {
+      onImageSaved();
+    } catch (error) {
       toast({
         title: 'Erro ao Salvar',
-        description: result.error || 'Não foi possível salvar a imagem.',
+        description: 'Não foi possível salvar a imagem no armazenamento local. Ele pode estar cheio.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 

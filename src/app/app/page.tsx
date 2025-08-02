@@ -9,35 +9,17 @@ import { Button } from '@/components/ui/button';
 import { GallerySection } from '@/components/gallery-section';
 import { Separator } from '@/components/ui/separator';
 import { useState, useTransition } from 'react';
-import { deleteImage } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 
 function AppPage() {
-  const [images, setImages] = useState<string[]>([]);
-  const [isDeleting, startDeleteTransition] = useTransition();
-  const { toast } = useToast();
+  const [imagesVersion, setImagesVersion] = useState(0);
 
-  const handleImageSaved = (newImageUrl: string) => {
-    setImages(prevImages => [newImageUrl, ...prevImages]);
+  const handleImageSaved = () => {
+    setImagesVersion(prev => prev + 1);
   };
-
-  const handleImageDeleted = (imageUrl: string) => {
-    startDeleteTransition(async () => {
-      const result = await deleteImage({ imageUrl });
-      if (result.success) {
-        toast({
-            title: "Sucesso!",
-            description: result.message,
-        });
-        setImages((prevImages) => prevImages.filter(img => img !== imageUrl));
-      } else {
-          toast({
-              title: "Erro",
-              description: result.error,
-              variant: "destructive",
-          });
-      }
-    });
+  
+  const handleImageDeleted = () => {
+    setImagesVersion(prev => prev + 1);
   };
 
 
@@ -90,10 +72,8 @@ function AppPage() {
       <Separator className="my-12" />
 
       <GallerySection 
-        images={images}
-        setImages={setImages}
+        key={imagesVersion}
         onImageDeleted={handleImageDeleted}
-        isDeleting={isDeleting}
         showBackButton={false} 
       />
 
