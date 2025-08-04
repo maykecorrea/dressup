@@ -83,10 +83,11 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
+    // Instrução principal e imperativa no início.
     const promptParts: any[] = [
         { text: "Vista a modelo da primeira imagem com as roupas das imagens seguintes. REGRA MAIS IMPORTANTE: MANTENHA O ROSTO, CORPO E CABELO DA MODELO ORIGINAL INTACTOS. Apenas troque as roupas." },
         { media: { url: modelPhotoDataUri } },
-        { text: "Esta é a blusa para vestir na modelo." },
+        { text: "Esta é a peça de roupa principal para vestir na modelo (blusa, vestido, etc)." },
         { media: { url: garmentPhotoDataUri } },
       ];
   
@@ -95,7 +96,7 @@ const generateVirtualDressUpFlow = ai.defineFlow(
         promptParts.push({ media: { url: pantsPhotoDataUri } });
       }
       if (coldWeatherPhotoDataUri) {
-        promptParts.push({ text: "Adicione este casaco por cima da blusa." });
+        promptParts.push({ text: "Adicione este casaco por cima da peça principal." });
         promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
       }
       if (shoesPhotoDataUri) {
@@ -108,13 +109,13 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       }
   
       let finalInstructions = `
-  Requisitos Finais:
-  - O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da modelo original com o look completo.
-  - O look deve ser harmonioso e bem ajustado.
-  - Use estes guias para refinar o resultado:
-    - Guia Positivo (Siga estas dicas): ${positivePrompt}
-    - Guia Negativo (Evite estritamente isso): ${negativePrompt}
-  `;
+Requisitos Finais:
+- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da modelo original com o look completo.
+- O look deve ser harmonioso e bem ajustado no corpo da modelo.
+- Siga estritamente os guias abaixo para refinar o resultado:
+  - Guia Positivo (Siga estas dicas): ${positivePrompt}
+  - Guia Negativo (EVITE a todo custo): ${negativePrompt}
+`;
   
       if (customStylePrompt) {
           finalInstructions += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;

@@ -49,7 +49,7 @@ interface DressUpFormProps {
 }
 
 const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
-const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhadas, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos";
+const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhadas, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos, rosto diferente, outra pessoa, mudar o rosto, mudar o cabelo";
 
 export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const { toast } = useToast();
@@ -203,6 +203,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     if (generatedImage) {
       form.setValue('modelPhotoDataUri', generatedImage);
       setModelPreview(generatedImage);
+      setGeneratedImage(null);
       toast({
         title: 'Imagem Definida!',
         description: 'O resultado anterior agora é a imagem base para um novo look.',
@@ -405,7 +406,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         {zoom > 1 && (
                             <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
                                 <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
-                                <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
+                                <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para movimentar</span>
                             </div>
                         )}
                         <div className="flex items-center gap-4">
@@ -451,7 +452,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     </Button>
                      <Button 
                       onClick={handleUseAsBase}
-                      className="w-full font-bold bg-gradient-to-r from-yellow-500 via-red-500 to-pink-600 text-secondary-foreground hover:shadow-lg hover:scale-105 transition-transform lg:col-span-1 sm:col-span-2" 
+                      className="w-full font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-600 text-white hover:shadow-lg hover:scale-105 transition-transform lg:col-span-1 sm:col-span-2" 
                       size="lg"
                     >
                       <RefreshCw className="mr-2 h-5 w-5" />
@@ -465,5 +466,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
-
-    
