@@ -83,35 +83,32 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
-    // Instrução principal e imperativa no início.
     const promptParts: any[] = [
-        { text: "Vista a modelo da primeira imagem com as roupas das imagens seguintes. REGRA MAIS IMPORTANTE: MANTENHA O ROSTO, CORPO E CABELO DA MODELO ORIGINAL INTACTOS. Apenas troque as roupas." },
+        { text: "Você é um editor de imagem profissional. Sua única tarefa é substituir a roupa da pessoa na 'IMAGEM ORIGINAL' pelas roupas fornecidas nas 'PEÇAS DE ROUPA'. A pessoa na imagem final DEVE SER IDÊNTICA à da 'IMAGEM ORIGINAL'. NÃO MUDE o rosto, o cabelo, a cor da pele ou o corpo." },
+        { text: "IMAGEM ORIGINAL:"},
         { media: { url: modelPhotoDataUri } },
-        { text: "Esta é a peça de roupa principal para vestir na modelo (blusa, vestido, etc)." },
+        { text: "PEÇAS DE ROUPA:" },
         { media: { url: garmentPhotoDataUri } },
       ];
   
       if (pantsPhotoDataUri) {
-        promptParts.push({ text: "Use estas calças." });
         promptParts.push({ media: { url: pantsPhotoDataUri } });
       }
       if (coldWeatherPhotoDataUri) {
-        promptParts.push({ text: "Adicione este casaco por cima da peça principal." });
         promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
       }
       if (shoesPhotoDataUri) {
-        promptParts.push({ text: "Use estes sapatos." });
         promptParts.push({ media: { url: shoesPhotoDataUri } });
       }
       if (necklacePhotoDataUri) {
-        promptParts.push({ text: "Adicione este acessório." });
         promptParts.push({ media: { url: necklacePhotoDataUri } });
       }
   
       let finalInstructions = `
-Requisitos Finais:
-- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da modelo original com o look completo.
-- O look deve ser harmonioso e bem ajustado no corpo da modelo.
+Instruções Finais:
+- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade.
+- O look deve ser harmonioso e bem ajustado no corpo da modelo da IMAGEM ORIGINAL.
+- Aplique o look completo (todas as PEÇAS DE ROUPA) na modelo.
 - Siga estritamente os guias abaixo para refinar o resultado:
   - Guia Positivo (Siga estas dicas): ${positivePrompt}
   - Guia Negativo (EVITE a todo custo): ${negativePrompt}
