@@ -2,9 +2,6 @@
 
 import { generateVirtualDressUp } from '@/ai/flows/generate-virtual-dress-up';
 import { z } from 'zod';
-import fs from 'fs';
-import path from 'path';
-import { revalidatePath } from 'next/cache';
 
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
