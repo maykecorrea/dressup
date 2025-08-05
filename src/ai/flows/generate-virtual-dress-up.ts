@@ -35,7 +35,7 @@ const GenerateVirtualDressUpInputSchema = z.object({
     .describe(
       "Optional: A photo of shoes, as a data URI."
     ),
-  necklacePhotoDataUri: z
+necklacePhotoDataUri: z
     .string()
     .optional()
     .describe(
@@ -83,11 +83,10 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
+    // Simple, direct instruction based on the user's successful prompt.
     const promptParts: any[] = [
-        { text: "Você é um especialista em edição de fotos. Sua tarefa é vestir a pessoa na 'IMAGEM BASE' com as 'IMAGENS DE VESTUÁRIO'. É crucial que a pessoa na imagem final seja idêntica à da 'IMAGEM BASE'. Preserve cada detalhe da IMAGEM BASE: o rosto, a expressão facial, a pose exata, o cabelo, a iluminação e o enquadramento. A única mudança permitida é a sobreposição das roupas." },
-        { text: "IMAGEM BASE (Não altere esta pessoa/pose):"},
+        { text: `Pegue a modelo da primeira foto e vista nela as roupas das imagens seguintes. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original.` },
         { media: { url: modelPhotoDataUri } },
-        { text: "IMAGENS DE VESTUÁRIO (Use para vestir a pessoa):" },
         { media: { url: garmentPhotoDataUri } },
       ];
   
@@ -104,13 +103,11 @@ const generateVirtualDressUpFlow = ai.defineFlow(
         promptParts.push({ media: { url: necklacePhotoDataUri } });
       }
   
+      // The final part of the prompt includes the quality guides and custom style.
       let finalInstructions = `
-Instruções Finais:
-- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da pessoa da IMAGEM BASE, no mesmo enquadramento e pose, usando as roupas fornecidas.
-- O look deve ser harmonioso e bem ajustado no corpo da modelo.
-- Siga estritamente os guias abaixo para refinar o resultado:
-  - Guia Positivo (Siga estas dicas): ${positivePrompt}
-  - Guia Negativo (EVITE a todo custo): ${negativePrompt}
+Instruções de Qualidade e Estilo:
+- Guia Positivo (Siga estas dicas): ${positivePrompt}
+- Guia Negativo (EVITE a todo custo): ${negativePrompt}
 `;
   
       if (customStylePrompt) {
