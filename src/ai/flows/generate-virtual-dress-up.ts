@@ -83,9 +83,9 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
-    // Step 1: Dress the model with the main garment. This improves identity preservation.
+    // Etapa 1: Vestir a modelo com a peça principal. Isso melhora a preservação da identidade.
     const step1Prompt = [
-        { text: "Pegue a modelo da primeira foto e vista a roupa da segunda imagem. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original." },
+        { text: "Sua tarefa é vestir a pessoa da primeira imagem com a roupa da segunda imagem. REGRA INVIOLÁVEL: A pessoa, o rosto e a pose na imagem resultante DEVEM SER IDÊNTICOS aos da imagem original. Apenas substitua a roupa." },
         { media: { url: modelPhotoDataUri } },
         { media: { url: garmentPhotoDataUri } },
         { text: `Guia Negativo (EVITE a todo custo): ${negativePrompt}` }
@@ -105,26 +105,26 @@ const generateVirtualDressUpFlow = ai.defineFlow(
 
     const imageAfterStep1 = step1Result.media.url;
 
-    // Step 2: Add the remaining items to the result of step 1.
     const remainingItems = [
-        { item: pantsPhotoDataUri, name: "calças" },
-        { item: coldWeatherPhotoDataUri, name: "casaco" },
-        { item: shoesPhotoDataUri, name: "sapatos" },
-        { item: necklacePhotoDataUri, name: "acessório" },
-    ].filter(i => i.item);
+        pantsPhotoDataUri,
+        coldWeatherPhotoDataUri,
+        shoesPhotoDataUri,
+        necklacePhotoDataUri,
+    ].filter(Boolean) as string[];
 
-    // If there are no more items, return the result of step 1
+    // Se não houver mais itens, retorne o resultado da etapa 1
     if (remainingItems.length === 0) {
         return { dressedUpPhotoDataUri: imageAfterStep1 };
     }
-
+    
+    // Etapa 2: Adicionar os itens restantes ao resultado da etapa 1.
     const step2Prompt: any[] = [
-        { text: `Pegue a modelo da primeira foto e vista nela as roupas das imagens seguintes. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original.` },
-        { media: { url: imageAfterStep1 } }, // Use the result from step 1 as the new base
+        { text: "Use a primeira imagem como base. NÃO ALTERE a pessoa, o rosto, o cabelo ou a pose. Apenas adicione as roupas e acessórios das imagens seguintes a ela." },
+        { media: { url: imageAfterStep1 } }, // Use o resultado da etapa 1 como a nova base
     ];
 
-    remainingItems.forEach(i => {
-        step2Prompt.push({ media: { url: i.item! } });
+    remainingItems.forEach(item => {
+        step2Prompt.push({ media: { url: item } });
     });
 
     let finalInstructions = `
