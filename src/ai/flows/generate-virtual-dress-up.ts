@@ -83,52 +83,74 @@ const generateVirtualDressUpFlow = ai.defineFlow(
       customStylePrompt,
     } = input;
     
-    // Simple, direct instruction based on the user's successful prompt.
-    const promptParts: any[] = [
-        { text: `Pegue a modelo da primeira foto e vista nela as roupas das imagens seguintes. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original.` },
+    // Step 1: Dress the model with the main garment. This improves identity preservation.
+    const step1Prompt = [
+        { text: "Pegue a modelo da primeira foto e vista a roupa da segunda imagem. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original." },
         { media: { url: modelPhotoDataUri } },
         { media: { url: garmentPhotoDataUri } },
-      ];
+        { text: `Guia Negativo (EVITE a todo custo): ${negativePrompt}` }
+    ];
+
+    const step1Result = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-preview-image-generation',
+        prompt: step1Prompt,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
+      });
   
-      if (pantsPhotoDataUri) {
-        promptParts.push({ media: { url: pantsPhotoDataUri } });
-      }
-      if (coldWeatherPhotoDataUri) {
-        promptParts.push({ media: { url: coldWeatherPhotoDataUri } });
-      }
-      if (shoesPhotoDataUri) {
-        promptParts.push({ media: { url: shoesPhotoDataUri } });
-      }
-      if (necklacePhotoDataUri) {
-        promptParts.push({ media: { url: necklacePhotoDataUri } });
-      }
-  
-      // The final part of the prompt includes the quality guides and custom style.
-      let finalInstructions = `
+    if (!step1Result.media?.url) {
+        throw new Error('A IA não conseguiu gerar a imagem para a primeira etapa.');
+    }
+
+    const imageAfterStep1 = step1Result.media.url;
+
+    // Step 2: Add the remaining items to the result of step 1.
+    const remainingItems = [
+        { item: pantsPhotoDataUri, name: "calças" },
+        { item: coldWeatherPhotoDataUri, name: "casaco" },
+        { item: shoesPhotoDataUri, name: "sapatos" },
+        { item: necklacePhotoDataUri, name: "acessório" },
+    ].filter(i => i.item);
+
+    // If there are no more items, return the result of step 1
+    if (remainingItems.length === 0) {
+        return { dressedUpPhotoDataUri: imageAfterStep1 };
+    }
+
+    const step2Prompt: any[] = [
+        { text: `Pegue a modelo da primeira foto e vista nela as roupas das imagens seguintes. É muito importante que a pessoa, o rosto e a pose sejam exatamente os mesmos da foto original.` },
+        { media: { url: imageAfterStep1 } }, // Use the result from step 1 as the new base
+    ];
+
+    remainingItems.forEach(i => {
+        step2Prompt.push({ media: { url: i.item! } });
+    });
+
+    let finalInstructions = `
 Instruções de Qualidade e Estilo:
 - Guia Positivo (Siga estas dicas): ${positivePrompt}
 - Guia Negativo (EVITE a todo custo): ${negativePrompt}
 `;
-  
-      if (customStylePrompt) {
-          finalInstructions += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
-      }
-  
-      promptParts.push({ text: finalInstructions });
 
+    if (customStylePrompt) {
+        finalInstructions += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
+    }
 
-    const { media } = await ai.generate({
+    step2Prompt.push({ text: finalInstructions });
+    
+    const step2Result = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: promptParts,
+      prompt: step2Prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
     });
 
-    if (!media?.url) {
-      throw new Error('A IA não conseguiu gerar uma imagem para o look completo.');
+    if (!step2Result.media?.url) {
+      throw new Error('A IA não conseguiu gerar uma imagem para o look completo na segunda etapa.');
     }
 
-    return { dressedUpPhotoDataUri: media.url };
+    return { dressedUpPhotoDataUri: step2Result.media.url };
   }
 );
