@@ -84,10 +84,10 @@ const generateVirtualDressUpFlow = ai.defineFlow(
     } = input;
     
     const promptParts: any[] = [
-        { text: "Você é um editor de imagem profissional. Sua única tarefa é substituir a roupa da pessoa na 'IMAGEM ORIGINAL' pelas roupas fornecidas nas 'PEÇAS DE ROUPA'. A pessoa na imagem final DEVE SER IDÊNTICA à da 'IMAGEM ORIGINAL'. NÃO MUDE o rosto, o cabelo, a cor da pele ou o corpo." },
-        { text: "IMAGEM ORIGINAL:"},
+        { text: "Você é um especialista em edição de fotos. Sua tarefa é vestir a pessoa na 'IMAGEM BASE' com as 'IMAGENS DE VESTUÁRIO'. É crucial que a pessoa na imagem final seja idêntica à da 'IMAGEM BASE'. Preserve cada detalhe da IMAGEM BASE: o rosto, a expressão facial, a pose exata, o cabelo, a iluminação e o enquadramento. A única mudança permitida é a sobreposição das roupas." },
+        { text: "IMAGEM BASE (Não altere esta pessoa/pose):"},
         { media: { url: modelPhotoDataUri } },
-        { text: "PEÇAS DE ROUPA:" },
+        { text: "IMAGENS DE VESTUÁRIO (Use para vestir a pessoa):" },
         { media: { url: garmentPhotoDataUri } },
       ];
   
@@ -106,9 +106,8 @@ const generateVirtualDressUpFlow = ai.defineFlow(
   
       let finalInstructions = `
 Instruções Finais:
-- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade.
-- O look deve ser harmonioso e bem ajustado no corpo da modelo da IMAGEM ORIGINAL.
-- Aplique o look completo (todas as PEÇAS DE ROUPA) na modelo.
+- O resultado deve ser uma ÚNICA imagem fotorrealista e de alta qualidade da pessoa da IMAGEM BASE, no mesmo enquadramento e pose, usando as roupas fornecidas.
+- O look deve ser harmonioso e bem ajustado no corpo da modelo.
 - Siga estritamente os guias abaixo para refinar o resultado:
   - Guia Positivo (Siga estas dicas): ${positivePrompt}
   - Guia Negativo (EVITE a todo custo): ${negativePrompt}
