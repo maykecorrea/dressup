@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save, PencilLine, Move, RefreshCw } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, ZoomIn, ZoomOut, Footprints, Gem, Snowflake, Save, PencilLine, Move, RefreshCw, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,6 +20,8 @@ import { useRouter } from 'next/navigation';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 // Custom Pants Icon
 const PantsIcon = () => (
@@ -62,6 +64,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [keepLook, setKeepLook] = useState(false);
   const router = useRouter();
   const auth = getAuth(app);
 
@@ -105,6 +108,22 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
+  const resetClothingFields = () => {
+    // Reset form values
+    form.setValue('garmentPhotoDataUri', '');
+    form.setValue('pantsPhotoDataUri', '');
+    form.setValue('shoesPhotoDataUri', '');
+    form.setValue('necklacePhotoDataUri', '');
+    form.setValue('coldWeatherPhotoDataUri', '');
+    form.setValue('customStylePrompt', '');
+    // Reset previews
+    setGarmentPreview(null);
+    setPantsPreview(null);
+    setShoesPreview(null);
+    setNecklacePreview(null);
+    setColdWeatherPreview(null);
+  };
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, field: keyof FormValues) => {
     const file = event.target.files?.[0];
@@ -117,6 +136,9 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         switch (field) {
             case 'modelPhotoDataUri':
                 setModelPreview(dataUri);
+                if (!keepLook) {
+                    resetClothingFields();
+                }
                 break;
             case 'garmentPhotoDataUri':
                 setGarmentPreview(dataUri);
@@ -243,13 +265,16 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       setPosition({ x: 0, y: 0 });
     }
 
-  const ImageUpload = ({ fieldName, preview, label, icon }: { fieldName: keyof FormValues, preview: string | null, label: string, icon: React.ReactNode }) => (
+  const ImageUpload = ({ fieldName, preview, label, icon, children }: { fieldName: keyof FormValues, preview: string | null, label: string, icon: React.ReactNode, children?: React.ReactNode }) => (
     <FormField
       control={form.control}
       name={fieldName}
       render={() => (
         <FormItem className="w-full">
-          <FormLabel className="flex items-center gap-2 text-lg font-semibold"><div className="text-secondary">{icon}</div>{label}</FormLabel>
+          <div className="flex justify-between items-center">
+            <FormLabel className="flex items-center gap-2 text-lg font-semibold"><div className="text-secondary">{icon}</div>{label}</FormLabel>
+            {children}
+          </div>
           <FormControl>
             <Card className="aspect-[4/5] w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 bg-muted/20">
               <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-4 rounded-lg">
@@ -297,7 +322,14 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2">
-                    <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />} />
+                     <ImageUpload fieldName="modelPhotoDataUri" preview={modelPreview} label="Imagem do(a) Modelo" icon={<ImageIcon />}>
+                        <div className="flex items-center space-x-2">
+                           <Checkbox id="keepLook" checked={keepLook} onCheckedChange={(checked) => setKeepLook(!!checked)} />
+                           <Label htmlFor="keepLook" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                             Manter Look?
+                           </Label>
+                        </div>
+                     </ImageUpload>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
