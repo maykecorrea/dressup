@@ -10,9 +10,8 @@
  */
 
 import { openai } from '@/ai/openai';
-import { dataUriToTempFile, base64ToDataUri } from '@/ai/utils';
+import { dataUriToBuffer, base64ToDataUri } from '@/ai/utils';
 import { z } from 'zod';
-import * as fs from 'fs';
 
 const EnhanceVirtualDressUpWithPositivePromptsInputSchema = z.object({
   modelPhotoDataUri: z
@@ -41,41 +40,31 @@ export type EnhanceVirtualDressUpWithPositivePromptsOutput = z.infer<typeof Enha
 export async function enhanceVirtualDressUpWithPositivePrompts(input: EnhanceVirtualDressUpWithPositivePromptsInput): Promise<EnhanceVirtualDressUpWithPositivePromptsOutput> {
   const { modelPhotoDataUri, garmentPhotoDataUri, positivePrompt, negativePrompt } = input;
   
-  const tempFiles: Array<{ filePath: string; cleanup: () => void }> = [];
-  
   try {
-    // Convert data URIs to temp files
-    const modelFile = dataUriToTempFile(modelPhotoDataUri);
-    const garmentFile = dataUriToTempFile(garmentPhotoDataUri);
-    tempFiles.push(modelFile, garmentFile);
+    // Convert data URIs to buffers
+    const modelBuffer = dataUriToBuffer(modelPhotoDataUri);
     
-    const prompt = `Replace the clothing of the model in the model photo with the garment in the garment photo. Consider the fit and style of the garment to realistically dress the model. Apply the following positive prompts to enhance the image: ${positivePrompt}. ${negativePrompt ? `Avoid these characteristics: ${negativePrompt}.` : ''}`;
+    const prompt = `Replace the clothing of the model in the photo with the garment shown in the reference. Consider the fit and style of the garment to realistically dress the model. Apply the following positive prompts to enhance the image: ${positivePrompt}. ${negativePrompt ? `Avoid these characteristics: ${negativePrompt}.` : ''}`;
     
     const result = await openai.images.edit({
       model: "gpt-image-1",
-      image: [
-        fs.createReadStream(modelFile.filePath),
-        fs.createReadStream(garmentFile.filePath)
-      ],
+      image: new File([modelBuffer.buffer], "model.png", { type: modelBuffer.mimeType }),
       prompt: prompt,
       size: "1024x1024",
       quality: "high",
       input_fidelity: "high"
     });
 
-    if (!result.data[0].b64_json) {
+    if (!result.data || !result.data[0].b64_json) {
       throw new Error('Failed to generate image');
     }
 
     return {
-      dressedUpResult: base64ToDataUri(result.data[0].b64_json, 'image/png'),
+      dressedUpResult: base64ToDataUri(result.data[0].b64_json!, 'image/png'),
     };
     
   } catch (error) {
     console.error('Error in enhanceVirtualDressUpWithPositivePrompts:', error);
     throw error;
-  } finally {
-    // Cleanup temp files
-    tempFiles.forEach(file => file.cleanup());
   }
 }

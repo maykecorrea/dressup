@@ -168,7 +168,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     const result = await performDressUp(values);
     setIsLoading(false);
 
-    if (result.success) {
+    if (result.success && result.url) {
       setGeneratedImage(result.url);
       toast({
         title: 'Sucesso!',
