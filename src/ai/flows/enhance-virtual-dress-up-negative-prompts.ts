@@ -9,8 +9,9 @@
  * - EnhanceVirtualDressUpWithNegativePromptsOutput - The return type for the enhanceVirtualDressUpWithNegativePrompts function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { openai } from '@/ai/openai';
+import { dataUriToBuffer, base64ToDataUri } from '@/ai/utils';
+import { z } from 'zod';
 
 const EnhanceVirtualDressUpWithNegativePromptsInputSchema = z.object({
   modelPhotoDataUri: z
@@ -34,56 +35,41 @@ const EnhanceVirtualDressUpWithNegativePromptsOutputSchema = z.object({
 export type EnhanceVirtualDressUpWithNegativePromptsOutput = z.infer<typeof EnhanceVirtualDressUpWithNegativePromptsOutputSchema>;
 
 export async function enhanceVirtualDressUpWithNegativePrompts(input: EnhanceVirtualDressUpWithNegativePromptsInput): Promise<EnhanceVirtualDressUpWithNegativePromptsOutput> {
-  return enhanceVirtualDressUpWithNegativePromptsFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'enhanceVirtualDressUpWithNegativePromptsPrompt',
-  input: {schema: EnhanceVirtualDressUpWithNegativePromptsInputSchema},
-  output: {schema: EnhanceVirtualDressUpWithNegativePromptsOutputSchema},
-  prompt: `You are a virtual stylist. You will dress up a model in a provided garment, adhering to positive and negative prompts to refine the output.
-
-Model Photo:
-{{media url=modelPhotoDataUri}}
-
-Garment Photo:
-{{media url=garmentPhotoDataUri}}
-
-Instructions: Replace the clothing on the model in the first image with the garment in the second image. Consider the style and fit of the garment.
-
-{{#if positivePrompt}}
-Positive Prompt: {{{positivePrompt}}}
-{{/if}}
-
-{{#if negativePrompt}}
-Negative Prompt: {{{negativePrompt}}}
-{{/if}}
-
-Output: A single image of the model wearing the new garment, incorporating the instructions and prompts. Focus on creating a seamless and realistic result, avoiding the negative prompts. Return the final result as a data URI.
-`,
-});
-
-const enhanceVirtualDressUpWithNegativePromptsFlow = ai.defineFlow(
-  {
-    name: 'enhanceVirtualDressUpWithNegativePromptsFlow',
-    inputSchema: EnhanceVirtualDressUpWithNegativePromptsInputSchema,
-    outputSchema: EnhanceVirtualDressUpWithNegativePromptsOutputSchema,
-  },
-  async input => {
-    const {media} = await ai.generate({
-      prompt: [
-        {media: {url: input.modelPhotoDataUri}},
-        {media: {url: input.garmentPhotoDataUri}},
-        {text: `Instructions: Replace the clothing on the model in the first image with the garment in the second image. Consider the style and fit of the garment.
-
-${input.positivePrompt ? `Positive Prompt: ${input.positivePrompt}` : ''}
-${input.negativePrompt ? `Negative Prompt: ${input.negativePrompt}` : ''}`}
-      ],
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
+  const { modelPhotoDataUri, garmentPhotoDataUri, positivePrompt, negativePrompt } = input;
+  
+  try {
+    // Convert data URIs to buffers
+    const modelBuffer = dataUriToBuffer(modelPhotoDataUri);
+    
+    let prompt = 'Replace the clothing on the model in the photo with the garment shown in the reference. Consider the style and fit of the garment.';
+    
+    if (positivePrompt) {
+      prompt += ` Positive guidance: ${positivePrompt}`;
+    }
+    
+    if (negativePrompt) {
+      prompt += ` Avoid these characteristics: ${negativePrompt}`;
+    }
+    
+    const result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: new File([modelBuffer.buffer], "model.png", { type: modelBuffer.mimeType }),
+      prompt: prompt,
+      size: "1024x1024",
+      quality: "high",
+      input_fidelity: "high"
     });
-    return {dressedUpPhotoDataUri: media.url!};
+
+    if (!result.data || !result.data[0].b64_json) {
+      throw new Error('Failed to generate image');
+    }
+
+    return {
+      dressedUpPhotoDataUri: base64ToDataUri(result.data[0].b64_json!, 'image/png'),
+    };
+    
+  } catch (error) {
+    console.error('Error in enhanceVirtualDressUpWithNegativePrompts:', error);
+    throw error;
   }
-);
+}
