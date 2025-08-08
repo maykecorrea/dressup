@@ -9,8 +9,10 @@
  * - GenerateVirtualDressUpOutput - The return type for the generateVirtualDressUp function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { openai } from '@/ai/openai';
+import { dataUriToTempFile, base64ToDataUri } from '@/ai/utils';
+import { z } from 'zod';
+import * as fs from 'fs';
 
 const GenerateVirtualDressUpInputSchema = z.object({
   modelPhotoDataUri: z
@@ -61,96 +63,111 @@ const GenerateVirtualDressUpOutputSchema = z.object({
 export type GenerateVirtualDressUpOutput = z.infer<typeof GenerateVirtualDressUpOutputSchema>;
 
 export async function generateVirtualDressUp(input: GenerateVirtualDressUpInput): Promise<GenerateVirtualDressUpOutput> {
-  return generateVirtualDressUpFlow(input);
-}
-
-const generateVirtualDressUpFlow = ai.defineFlow(
-  {
-    name: 'generateVirtualDressUpFlow',
-    inputSchema: GenerateVirtualDressUpInputSchema,
-    outputSchema: GenerateVirtualDressUpOutputSchema,
-  },
-  async (input) => {
-    const {
-      modelPhotoDataUri,
-      garmentPhotoDataUri,
-      pantsPhotoDataUri,
-      shoesPhotoDataUri,
-      necklacePhotoDataUri,
-      coldWeatherPhotoDataUri,
-      positivePrompt,
-      negativePrompt,
-      customStylePrompt,
-    } = input;
-    
-    // Etapa 1: Vestir a modelo com a peça principal. Isso melhora a preservação da identidade.
-    const step1Prompt = [
-        { text: "Sua tarefa é vestir a pessoa da primeira imagem com a roupa da segunda imagem. REGRA INVIOLÁVEL: A pessoa, o rosto e a pose na imagem resultante DEVEM SER IDÊNTICOS aos da imagem original. Apenas substitua a roupa." },
-        { media: { url: modelPhotoDataUri } },
-        { media: { url: garmentPhotoDataUri } },
-        { text: `Guia Negativo (EVITE a todo custo): ${negativePrompt}` }
-    ];
-
-    const step1Result = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: step1Prompt,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-      });
+  const {
+    modelPhotoDataUri,
+    garmentPhotoDataUri,
+    pantsPhotoDataUri,
+    shoesPhotoDataUri,
+    necklacePhotoDataUri,
+    coldWeatherPhotoDataUri,
+    positivePrompt,
+    negativePrompt,
+    customStylePrompt,
+  } = input;
   
-    if (!step1Result.media?.url) {
-        throw new Error('A IA não conseguiu gerar a imagem para a primeira etapa.');
+  try {
+    // Etapa 1: Vestir a modelo com a peça principal
+    const step1TempFiles: Array<{ filePath: string; cleanup: () => void }> = [];
+    
+    // Convert model and main garment to temp files
+    const modelFile = dataUriToTempFile(modelPhotoDataUri);
+    const garmentFile = dataUriToTempFile(garmentPhotoDataUri);
+    step1TempFiles.push(modelFile, garmentFile);
+    
+    const step1Prompt = `Sua tarefa é vestir a pessoa da primeira imagem com a roupa da segunda imagem. REGRA INVIOLÁVEL: A pessoa, o rosto e a pose na imagem resultante DEVEM SER IDÊNTICOS aos da imagem original. Apenas substitua a roupa. Guia Negativo (EVITE a todo custo): ${negativePrompt}`;
+
+    const step1Result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: [
+        fs.createReadStream(modelFile.filePath),
+        fs.createReadStream(garmentFile.filePath)
+      ],
+      prompt: step1Prompt,
+      size: "1024x1024",
+      quality: "high",
+      input_fidelity: "high"
+    });
+
+    // Cleanup step 1 temp files
+    step1TempFiles.forEach(file => file.cleanup());
+
+    if (!step1Result.data[0].b64_json) {
+      throw new Error('A IA não conseguiu gerar a imagem para a primeira etapa.');
     }
 
-    const imageAfterStep1 = step1Result.media.url;
+    const imageAfterStep1DataUri = base64ToDataUri(step1Result.data[0].b64_json, 'image/png');
 
     const remainingItems = [
-        pantsPhotoDataUri,
-        coldWeatherPhotoDataUri,
-        shoesPhotoDataUri,
-        necklacePhotoDataUri,
+      pantsPhotoDataUri,
+      coldWeatherPhotoDataUri,
+      shoesPhotoDataUri,
+      necklacePhotoDataUri,
     ].filter(Boolean) as string[];
 
     // Se não houver mais itens, retorne o resultado da etapa 1
     if (remainingItems.length === 0) {
-        return { dressedUpPhotoDataUri: imageAfterStep1 };
+      return { dressedUpPhotoDataUri: imageAfterStep1DataUri };
     }
     
-    // Etapa 2: Adicionar os itens restantes ao resultado da etapa 1.
-    const step2Prompt: any[] = [
-        { text: "Use a primeira imagem como base. NÃO ALTERE a pessoa, o rosto, o cabelo ou a pose. Apenas adicione as roupas e acessórios das imagens seguintes a ela." },
-        { media: { url: imageAfterStep1 } }, // Use o resultado da etapa 1 como a nova base
-    ];
-
-    remainingItems.forEach(item => {
-        step2Prompt.push({ media: { url: item } });
+    // Etapa 2: Adicionar os itens restantes ao resultado da etapa 1
+    const step2TempFiles: Array<{ filePath: string; cleanup: () => void }> = [];
+    
+    // Convert step 1 result and remaining items to temp files
+    const step1ResultFile = dataUriToTempFile(imageAfterStep1DataUri);
+    step2TempFiles.push(step1ResultFile);
+    
+    const remainingItemFiles = remainingItems.map(item => {
+      const file = dataUriToTempFile(item);
+      step2TempFiles.push(file);
+      return file;
     });
 
-    let finalInstructions = `
+    let finalInstructions = `Use a primeira imagem como base. NÃO ALTERE a pessoa, o rosto, o cabelo ou a pose. Apenas adicione as roupas e acessórios das imagens seguintes a ela.
+
 Instruções de Qualidade e Estilo:
 - Guia Positivo (Siga estas dicas): ${positivePrompt}
-- Guia Negativo (EVITE a todo custo): ${negativePrompt}
-`;
+- Guia Negativo (EVITE a todo custo): ${negativePrompt}`;
 
     if (customStylePrompt) {
-        finalInstructions += `  - Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}\n`;
+      finalInstructions += `
+- Estilo Personalizado (Incorpore estes detalhes): ${customStylePrompt}`;
     }
 
-    step2Prompt.push({ text: finalInstructions });
+    const step2Images = [
+      fs.createReadStream(step1ResultFile.filePath),
+      ...remainingItemFiles.map(file => fs.createReadStream(file.filePath))
+    ];
     
-    const step2Result = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: step2Prompt,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
+    const step2Result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: step2Images,
+      prompt: finalInstructions,
+      size: "1024x1024",
+      quality: "high",
+      input_fidelity: "high"
     });
 
-    if (!step2Result.media?.url) {
+    // Cleanup step 2 temp files
+    step2TempFiles.forEach(file => file.cleanup());
+
+    if (!step2Result.data[0].b64_json) {
       throw new Error('A IA não conseguiu gerar uma imagem para o look completo na segunda etapa.');
     }
 
-    return { dressedUpPhotoDataUri: step2Result.media.url };
+    return { dressedUpPhotoDataUri: base64ToDataUri(step2Result.data[0].b64_json, 'image/png') };
+    
+  } catch (error) {
+    console.error('Error in generateVirtualDressUp:', error);
+    throw error;
   }
-);
+}

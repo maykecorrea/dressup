@@ -9,8 +9,10 @@
  * - EnhanceVirtualDressUpWithPositivePromptsOutput - The return type for the enhanceVirtualDressUpWithPositivePrompts function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { openai } from '@/ai/openai';
+import { dataUriToTempFile, base64ToDataUri } from '@/ai/utils';
+import { z } from 'zod';
+import * as fs from 'fs';
 
 const EnhanceVirtualDressUpWithPositivePromptsInputSchema = z.object({
   modelPhotoDataUri: z
@@ -37,49 +39,43 @@ const EnhanceVirtualDressUpWithPositivePromptsOutputSchema = z.object({
 export type EnhanceVirtualDressUpWithPositivePromptsOutput = z.infer<typeof EnhanceVirtualDressUpWithPositivePromptsOutputSchema>;
 
 export async function enhanceVirtualDressUpWithPositivePrompts(input: EnhanceVirtualDressUpWithPositivePromptsInput): Promise<EnhanceVirtualDressUpWithPositivePromptsOutput> {
-  return enhanceVirtualDressUpWithPositivePromptsFlow(input);
-}
+  const { modelPhotoDataUri, garmentPhotoDataUri, positivePrompt, negativePrompt } = input;
+  
+  const tempFiles: Array<{ filePath: string; cleanup: () => void }> = [];
+  
+  try {
+    // Convert data URIs to temp files
+    const modelFile = dataUriToTempFile(modelPhotoDataUri);
+    const garmentFile = dataUriToTempFile(garmentPhotoDataUri);
+    tempFiles.push(modelFile, garmentFile);
+    
+    const prompt = `Replace the clothing of the model in the model photo with the garment in the garment photo. Consider the fit and style of the garment to realistically dress the model. Apply the following positive prompts to enhance the image: ${positivePrompt}. ${negativePrompt ? `Avoid these characteristics: ${negativePrompt}.` : ''}`;
+    
+    const result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: [
+        fs.createReadStream(modelFile.filePath),
+        fs.createReadStream(garmentFile.filePath)
+      ],
+      prompt: prompt,
+      size: "1024x1024",
+      quality: "high",
+      input_fidelity: "high"
+    });
 
-const prompt = ai.definePrompt({
-  name: 'enhanceVirtualDressUpWithPositivePromptsPrompt',
-  input: {schema: EnhanceVirtualDressUpWithPositivePromptsInputSchema},
-  output: {schema: EnhanceVirtualDressUpWithPositivePromptsOutputSchema},
-  prompt: `You are a professional stylist creating a virtual dressing room experience.
-
-  Instructions:
-  1.  Replace the clothing of the model in the model photo with the garment in the garment photo.
-  2.  Consider the fit and style of the garment to realistically dress the model.
-  3.  Apply the following positive prompts to enhance the image: {{{positivePrompt}}}.
-  4.  If negative prompts are provided, avoid those characteristics: {{{negativePrompt}}}.
-
-  Model Photo: {{media url=modelPhotoDataUri}}
-  Garment Photo: {{media url=garmentPhotoDataUri}}
-
-  Output the final image of the model wearing the new outfit.
-  `,
-});
-
-const enhanceVirtualDressUpWithPositivePromptsFlow = ai.defineFlow(
-  {
-    name: 'enhanceVirtualDressUpWithPositivePromptsFlow',
-    inputSchema: EnhanceVirtualDressUpWithPositivePromptsInputSchema,
-    outputSchema: EnhanceVirtualDressUpWithPositivePromptsOutputSchema,
-  },
-  async input => {
-    const {media} = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: [
-          {media: {url: input.modelPhotoDataUri}},
-          {media: {url: input.garmentPhotoDataUri}},
-          {text: `Replace the model's clothing with the provided garment. Positive prompts: ${input.positivePrompt}. Negative prompts: ${input.negativePrompt || 'none'}.`}
-        ],
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-      });
+    if (!result.data[0].b64_json) {
+      throw new Error('Failed to generate image');
+    }
 
     return {
-      dressedUpResult: media!.url,
+      dressedUpResult: base64ToDataUri(result.data[0].b64_json, 'image/png'),
     };
+    
+  } catch (error) {
+    console.error('Error in enhanceVirtualDressUpWithPositivePrompts:', error);
+    throw error;
+  } finally {
+    // Cleanup temp files
+    tempFiles.forEach(file => file.cleanup());
   }
-);
+}
