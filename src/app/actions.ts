@@ -34,6 +34,7 @@ const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
   garmentPhotoDataUri: z.string().optional(),
   garmentDescription: z.string(),
+  completeLookPhotoDataUri: z.string().optional(),
 });
 
 export async function performDressUp(values: z.infer<typeof ActionInputSchema>) {

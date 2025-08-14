@@ -72,7 +72,11 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       accessory: { ...initialGarmentState },
   });
 
-  const [completeLookState, setCompleteLookState] = useState<Omit<GarmentState, 'isGeneratingLook' | 'description' | 'isGeneratingDescription'> & {isGeneratingLook: boolean}>({
+  const [completeLookState, setCompleteLookState] = useState<{
+      preview: string | null;
+      result: string | null;
+      isGeneratingLook: boolean;
+  }>({
       preview: null,
       result: null,
       isGeneratingLook: false,
@@ -111,19 +115,23 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
   
-  const processFile = (file: File, type: Exclude<GarmentType, 'completeLook'>) => {
+  const processFile = (file: File, type: Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
     const reader = new FileReader();
     reader.onloadend = () => {
         const dataUri = reader.result as string;
-        setGarments(prev => ({
-            ...prev,
-            [type]: { 
-                ...initialGarmentState, 
-                preview: dataUri,
-            }
-        }));
-        // Automatically generate description
-        handleGenerateDescription(dataUri, type);
+        if (type === 'completeLook') {
+            setCompleteLookState(prev => ({ ...prev, preview: dataUri }));
+        } else {
+            setGarments(prev => ({
+                ...prev,
+                [type]: { 
+                    ...initialGarmentState, 
+                    preview: dataUri,
+                }
+            }));
+            // Automatically generate description for individual garments
+            handleGenerateDescription(dataUri, type);
+        }
     };
     reader.readAsDataURL(file);
   };
@@ -148,7 +156,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     event.target.value = '';
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
     const file = event.target.files?.[0];
     if (file) {
         if(type === 'model'){
@@ -181,6 +189,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
           garmentDescription: garment.description,
+          garmentPhotoDataUri: garment.preview,
       });
 
       if (result.success && result.url) {
@@ -214,6 +223,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     const result = await performDressUp({
         modelPhotoDataUri: modelDataUri,
         garmentDescription: `um look completo consistindo de ${combinedDescription}`,
+        completeLookPhotoDataUri: completeLookState.preview ?? undefined,
     });
 
     if (result.success && result.url) {
@@ -340,8 +350,28 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 border rounded-lg">
-            <div className="space-y-4 md:col-span-2 flex flex-col items-center">
-                <div className="aspect-[4/5] w-full max-w-md rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative">
+            {/* Coluna Esquerda: Upload de Referência */}
+             <div className="space-y-4">
+                <Card className="w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl bg-muted/20 aspect-[4/5]">
+                    <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-2 rounded-lg">
+                       <Upload className="h-8 w-8 mb-1" />
+                       <p className="font-semibold text-sm">Enviar Imagem de Referência</p>
+                       <p className="text-xs">(Opcional)</p>
+                    </div>
+                    {completeLookState.preview && <Image src={completeLookState.preview} alt="Referência do look completo" fill style={{objectFit:"contain"}} className="p-2"/>}
+                    <Input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      onChange={(e) => handleFileChange(e, 'completeLook')}
+                      disabled={completeLookState.isGeneratingLook}
+                    />
+                </Card>
+            </div>
+            
+            {/* Coluna Direita: Resultado e Ações */}
+            <div className="space-y-4">
+                <div className="aspect-[4/5] w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative">
                     {completeLookState.isGeneratingLook ? (
                         <div className="text-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /><p className="text-sm mt-2">Combinando todas as peças...</p></div>
                     ) : completeLookState.result ? (
@@ -355,19 +385,19 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </div>
 
                 {completeLookState.result ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
-                        <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar na Galeria
+                    <div className="grid grid-cols-2 gap-2">
+                         <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                         </Button>
                          <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
                             <RefreshCw/> Refazer
                         </Button>
-                        <Button onClick={handleClear} variant="destructive" className="col-span-1 sm:col-span-2">
+                        <Button onClick={handleClear} variant="destructive" className="col-span-2">
                             <Trash2 /> Limpar Look Completo
                         </Button>
                     </div>
                 ) : (
-                    <Button onClick={handleGenerateCompleteLook} disabled={!hasAnyGarment || completeLookState.isGeneratingLook || !modelDataUri} className="w-full max-w-md mt-4">
+                    <Button onClick={handleGenerateCompleteLook} disabled={!hasAnyGarment || completeLookState.isGeneratingLook || !modelDataUri} className="w-full">
                         <Sparkles /> Gerar Look Completo
                     </Button>
                 )}
@@ -465,4 +495,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
-
