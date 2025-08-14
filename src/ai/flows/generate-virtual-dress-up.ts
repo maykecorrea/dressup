@@ -46,7 +46,7 @@ export async function generateVirtualDressUp(input: GenerateVirtualDressUpInput)
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
         prompt: promptParts,
         config: {
-            responseModalities: ['IMAGE'], 
+            responseModalities: ['IMAGE', 'TEXT'], 
         },
     });
 
