@@ -9,7 +9,7 @@
 
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {dotprompt} from '@genkit-ai/dotprompt';
+import {Dotprompt} from '@genkit-ai/dotprompt';
 import {googleCloud} from '@genkit-ai/google-cloud';
 
 // Initialize Genkit with the Google AI plugin
@@ -18,7 +18,7 @@ export const ai = genkit({
     googleAI({
       apiKey: process.env.GEMINI_API_KEY,
     }),
-    dotprompt(),
+    Dotprompt(),
     googleCloud(),
   ],
   logSinks: [],
