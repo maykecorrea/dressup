@@ -48,6 +48,8 @@ const initialGarmentState: GarmentState = {
     isGeneratingLook: false,
 };
 
+const garmentOrder: Exclude<GarmentType, 'completeLook'>[] = ['top', 'pants', 'coat', 'shoes', 'accessory'];
+
 const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: string, icon: ReactNode }> = {
     top: { label: 'Roupa (Topo)', icon: <Shirt /> },
     pants: { label: 'Calça', icon: <PantsIcon /> },
@@ -104,14 +106,48 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     
     if (result.success && result.description) {
         setGarments(prev => ({ ...prev, [type]: { ...prev[type], description: result.description, isGeneratingDescription: false } }));
-        toast({ title: "Descrição Gerada!", description: "A IA analisou a peça de roupa." });
+        toast({ title: `Descrição Gerada para ${garmentConfig[type].label}!`, description: "A IA analisou a peça de roupa." });
     } else {
         setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingDescription: false } }));
         toast({ title: "Erro", description: result.error || "Não foi possível gerar a descrição.", variant: "destructive" });
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'>) => {
+  const processFile = (file: File, type: Exclude<GarmentType, 'completeLook'>) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        const dataUri = reader.result as string;
+        setGarments(prev => ({
+            ...prev,
+            [type]: { ...initialGarmentState, preview: dataUri }
+        }));
+        handleGenerateDescription(type, dataUri);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleMultipleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+        // Distribute files according to the defined order
+        Array.from(files).forEach((file, index) => {
+            if (index < garmentOrder.length) {
+                const garmentType = garmentOrder[index];
+                processFile(file, garmentType);
+            }
+        });
+        if (files.length > 0) {
+            toast({
+                title: `${files.length} imagem(ns) carregadas!`,
+                description: "As descrições estão sendo geradas em segundo plano."
+            });
+        }
+    }
+    // Clear the input value to allow re-selecting the same files
+    event.target.value = '';
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model') => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -120,13 +156,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         if (type === 'model') {
           setModelPreview(dataUri);
           setModelDataUri(dataUri);
-        } else {
-          setGarments(prev => ({
-            ...prev,
-            [type]: { ...initialGarmentState, preview: dataUri }
-          }));
-          // Automatically trigger description generation
-          handleGenerateDescription(type, dataUri);
         }
       };
       reader.readAsDataURL(file);
@@ -241,14 +270,20 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
             <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-2 rounded-lg">
                <Upload className="h-8 w-8 mb-1" />
                <p className="font-semibold text-sm">Clique para enviar {label}</p>
-               <p className="text-xs">PNG, JPG ou WEBP</p>
+               <p className="text-xs">
+                  {type === 'top' ? 'Pode selecionar múltiplos' : 'PNG, JPG ou WEBP'}
+               </p>
             </div>
             {garment.preview && <Image src={garment.preview} alt={`${label} preview`} fill style={{objectFit:"contain"}} className="p-2"/>}
             <Input
               type="file"
               accept="image/png, image/jpeg, image/webp"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-              onChange={(e) => handleFileChange(e, type)}
+              onChange={type === 'top' ? handleMultipleFileChange : (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) processFile(file, type);
+              }}
+              multiple={type === 'top'} // Allow multiple only for the first input
               disabled={garment.isGeneratingDescription || garment.isGeneratingLook}
             />
           </Card>
@@ -401,6 +436,8 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         Para um resultado perfeito no "Look Completo", adicione as imagens na sequência correta:
                         <br/>
                         <strong className="text-secondary">1º Roupa (Topo) → 2º Calça → 3º Casaco → 4º Sapatos → 5º Acessório</strong>
+                        <br/>
+                        <span className="font-semibold">Dica: Você pode selecionar múltiplos arquivos no campo "Roupa (Topo)" para preencher tudo de uma vez!</span>
                       </AlertDescription>
                     </Alert>
 
@@ -437,3 +474,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
+
+    
