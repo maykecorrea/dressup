@@ -13,6 +13,8 @@ import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 // Custom Pants Icon
 const PantsIcon = () => (
@@ -28,7 +30,7 @@ interface DressUpFormProps {
   onImageSaved: () => void;
 }
 
-type GarmentType = 'top' | 'pants' | 'coat' | 'shoes' | 'accessory';
+type GarmentType = 'top' | 'pants' | 'coat' | 'shoes' | 'accessory' | 'completeLook';
 
 interface GarmentState {
     preview: string | null;
@@ -46,7 +48,7 @@ const initialGarmentState: GarmentState = {
     isGeneratingLook: false,
 };
 
-const garmentConfig: Record<GarmentType, { label: string, icon: ReactNode }> = {
+const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: string, icon: ReactNode }> = {
     top: { label: 'Roupa (Topo)', icon: <Shirt /> },
     pants: { label: 'Calça', icon: <PantsIcon /> },
     coat: { label: 'Casaco', icon: <Snowflake /> },
@@ -63,12 +65,18 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const [modelPreview, setModelPreview] = useState<string | null>(null);
   const [modelDataUri, setModelDataUri] = useState<string>('');
   
-  const [garments, setGarments] = useState<Record<GarmentType, GarmentState>>({
+  const [garments, setGarments] = useState<Record<Exclude<GarmentType, 'completeLook'>, GarmentState>>({
       top: { ...initialGarmentState },
       pants: { ...initialGarmentState },
       coat: { ...initialGarmentState },
       shoes: { ...initialGarmentState },
       accessory: { ...initialGarmentState },
+  });
+
+  const [completeLookState, setCompleteLookState] = useState<Omit<GarmentState, 'description' | 'isGeneratingDescription'>>({
+      preview: null, // Not used for complete look
+      result: null,
+      isGeneratingLook: false,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -84,7 +92,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
-  const handleGenerateDescription = async (type: GarmentType, dataUri: string) => {
+  const handleGenerateDescription = async (type: Exclude<GarmentType, 'completeLook'>, dataUri: string) => {
     if (!dataUri) {
         toast({ title: "Erro", description: "URI de dados inválido.", variant: "destructive" });
         return;
@@ -103,7 +111,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | GarmentType) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -125,7 +133,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
-  const handleGenerateLook = async (type: GarmentType) => {
+  const handleGenerateLook = async (type: Exclude<GarmentType, 'completeLook'>) => {
       const garment = garments[type];
       if (!modelDataUri) {
           toast({ title: "Erro", description: "Por favor, envie a imagem da modelo primeiro.", variant: "destructive" });
@@ -155,6 +163,43 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       }
   };
 
+  const handleGenerateCompleteLook = async () => {
+    if (!modelDataUri) {
+        toast({ title: "Erro", description: "Por favor, envie a imagem da modelo primeiro.", variant: "destructive" });
+        return;
+    }
+
+    const descriptions = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[])
+        .map(type => garments[type].description)
+        .filter(Boolean); // Filter out null/undefined descriptions
+
+    if (descriptions.length === 0) {
+        toast({ title: "Erro", description: "Nenhuma peça de roupa foi adicionada. Adicione pelo menos uma peça para gerar o look completo.", variant: "destructive" });
+        return;
+    }
+
+    const combinedDescription = descriptions.join('. ');
+
+    setCompleteLookState(prev => ({ ...prev, isGeneratingLook: true }));
+
+    const result = await performDressUp({
+        modelPhotoDataUri: modelDataUri,
+        garmentPhotoDataUri: '', // Not needed for complete look, AI will use description
+        garmentDescription: combinedDescription,
+        positivePrompt: defaultPositivePrompts,
+        negativePrompt: defaultNegativePrompts,
+    });
+
+    if (result.success && result.url) {
+        setCompleteLookState(prev => ({ ...prev, result: result.url, isGeneratingLook: false }));
+        toast({ title: "Look Completo Gerado!", description: "Todas as peças foram combinadas." });
+    } else {
+        setCompleteLookState(prev => ({ ...prev, isGeneratingLook: false }));
+        toast({ title: "Erro ao Gerar Look Completo", description: result.error || "Algo deu errado.", variant: "destructive" });
+    }
+  };
+
+
   const handleSaveToGallery = async (imageDataUri: string | null) => {
     if (!imageDataUri) return;
     setIsSaving(true);
@@ -180,7 +225,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
-  const GarmentSection = ({ type }: { type: GarmentType }) => {
+  const GarmentSection = ({ type }: { type: Exclude<GarmentType, 'completeLook'> }) => {
     const garment = garments[type];
     const { label, icon } = garmentConfig[type];
 
@@ -267,6 +312,48 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     );
   }
 
+  const CompleteLookSection = () => {
+    const hasAnyGarment = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).some(type => garments[type].preview);
+    const handleClear = () => {
+        setCompleteLookState({ result: null, isGeneratingLook: false, preview: null });
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg">
+            <div className="space-y-4 md:col-span-2 flex flex-col items-center">
+                <div className="aspect-[4/5] w-full max-w-md rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative">
+                    {completeLookState.isGeneratingLook ? (
+                        <div className="text-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /><p className="text-sm mt-2">Combinando todas as peças...</p></div>
+                    ) : completeLookState.result ? (
+                        <Image src={completeLookState.result} alt="Look Completo Result" fill style={{ objectFit: "contain" }} className="p-2" />
+                    ) : (
+                        <div className="text-center text-muted-foreground p-4">
+                            <Sparkles className="mx-auto h-12 w-12 mb-2 text-secondary/50" />
+                            <p className="font-semibold">O resultado do look completo aparecerá aqui</p>
+                        </div>
+                    )}
+                </div>
+
+                {completeLookState.result ? (
+                    <div className="grid grid-cols-2 gap-2 w-full max-w-md">
+                        <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar na Galeria
+                        </Button>
+                        <Button onClick={handleClear} variant="destructive">
+                            <Trash2 /> Limpar Look Completo
+                        </Button>
+                    </div>
+                ) : (
+                    <Button onClick={handleGenerateCompleteLook} disabled={!hasAnyGarment || completeLookState.isGeneratingLook || !modelDataUri} className="w-full max-w-md mt-4">
+                        <Sparkles /> Gerar Look Completo
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
   return (
     <>
       <div className="flex justify-end mb-8">
@@ -307,8 +394,18 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     <CardDescription>Adicione as peças de roupa uma a uma. Cada peça será gerada separadamente.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <Alert className="mb-6 border-secondary/50 text-center">
+                      <Info className="h-5 w-5"/>
+                      <AlertTitle className="text-lg font-bold">Importante: Siga a Ordem!</AlertTitle>
+                      <AlertDescription className="text-base">
+                        Para um resultado perfeito no "Look Completo", adicione as imagens na sequência correta:
+                        <br/>
+                        <strong className="text-secondary">1º Roupa (Topo) → 2º Calça → 3º Casaco → 4º Sapatos → 5º Acessório</strong>
+                      </AlertDescription>
+                    </Alert>
+
                     <Accordion type="single" collapsible className="w-full" value={activeAccordionItem} onValueChange={setActiveAccordionItem}>
-                        {(Object.keys(garmentConfig) as GarmentType[]).map(type => (
+                        {(Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).map(type => (
                             <AccordionItem value={type} key={type}>
                                 <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                                     <div className="flex items-center gap-3">
@@ -321,6 +418,17 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                                 </AccordionContent>
                             </AccordionItem>
                         ))}
+                         <AccordionItem value="completeLook">
+                            <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                    <Sparkles className="text-secondary" />
+                                    Look Completo
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <CompleteLookSection />
+                            </AccordionContent>
+                        </AccordionItem>
                     </Accordion>
                 </CardContent>
              </Card>
