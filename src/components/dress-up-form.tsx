@@ -183,7 +183,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
-          garmentPhotoDataUri: garment.preview,
           garmentDescription: garment.description,
           positivePrompt: defaultPositivePrompts,
           negativePrompt: defaultNegativePrompts,
