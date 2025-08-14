@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow that analyzes a garment image and generates a textual description.
@@ -9,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { geminiPro } from '@genkit-ai/googleai';
 
 const GenerateGarmentDescriptionInputSchema = z.object({
   garmentPhotoDataUri: z
@@ -26,6 +28,7 @@ export type GenerateGarmentDescriptionOutput = z.infer<typeof GenerateGarmentDes
 
 const descriptionPrompt = ai.definePrompt({
     name: 'garmentDescriptionPrompt',
+    model: geminiPro,
     input: { schema: GenerateGarmentDescriptionInputSchema },
     output: { schema: GenerateGarmentDescriptionOutputSchema },
     prompt: `Analise a imagem da peça de roupa fornecida e gere uma descrição detalhada e objetiva. Descreva o tipo de peça, cor, estampa, tecido, corte, estilo e qualquer outro detalhe que seja relevante para uma IA de geração de imagem entender como vestir uma modelo com esta roupa.
