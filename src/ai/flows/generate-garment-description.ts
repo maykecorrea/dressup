@@ -28,7 +28,7 @@ const descriptionPrompt = ai.definePrompt({
     name: 'garmentDescriptionPrompt',
     input: { schema: GenerateGarmentDescriptionInputSchema },
     output: { schema: GenerateGarmentDescriptionOutputSchema },
-    prompt: `Analise a imagem da peça de roupa fornecida e gere uma descrição detalhada e objetiva. Fale sobre o tipo de peça, cor, estampa, tecido, corte e qualquer outro detalhe relevante.
+    prompt: `Analise a imagem da peça de roupa fornecida e gere uma descrição detalhada e objetiva. Descreva o tipo de peça, cor, estampa, tecido, corte, estilo e qualquer outro detalhe que seja relevante para uma IA de geração de imagem entender como vestir uma modelo com esta roupa.
 
 Image: {{media url=garmentPhotoDataUri}}`,
 });
