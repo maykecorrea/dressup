@@ -5,13 +5,12 @@ import { initializeApp, getApp, getApps } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyApntKP5d_Bw9gnq74-ps9HEq59kPKAgZw",
-  authDomain: "virtuoso-m0zfw.firebaseapp.com",
-  databaseURL: "https://virtuoso-m0zfw-default-rtdb.firebaseio.com/",
-  projectId: "virtuoso-m0zfw",
-  storageBucket: "virtuoso-m0zfw.appspot.com",
-  messagingSenderId: "734542053930",
-  appId: "1:734542053930:web:3e39cc9b246f53dc15b953"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
