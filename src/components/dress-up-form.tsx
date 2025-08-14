@@ -3,7 +3,7 @@
 
 import { useState, useRef, ReactNode, useEffect } from 'react';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, ChevronDown, ChevronRight, FileText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -180,7 +180,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
-          garmentPhotoDataUri: garment.preview,
           garmentDescription: garment.description,
       });
 
@@ -282,7 +281,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
               disabled={garment.isGeneratingLook || garment.isGeneratingDescription}
             />
           </Card>
-          <Card className="min-h-[10rem] flex flex-col">
+          <Card className="flex flex-col min-h-[10rem]">
               <CardHeader className="p-3">
                   <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
               </CardHeader>
@@ -316,7 +315,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 <Button onClick={() => handleSaveToGallery(garment.result)} disabled={isSaving}>
                     {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                 </Button>
-                 <Button onClick={handleClear} variant="destructive" className="col-span-2">
+                <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook}>
+                    <RefreshCw/> Refazer
+                </Button>
+                <Button onClick={handleClear} variant="destructive">
                     <Trash2 /> Limpar
                 </Button>
             </div>
@@ -357,7 +359,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
                             {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar na Galeria
                         </Button>
-                        <Button onClick={handleClear} variant="destructive">
+                         <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
+                            <RefreshCw/> Refazer
+                        </Button>
+                        <Button onClick={handleClear} variant="destructive" className="col-span-1 sm:col-span-2">
                             <Trash2 /> Limpar Look Completo
                         </Button>
                     </div>
