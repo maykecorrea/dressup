@@ -59,11 +59,11 @@ export async function generateVirtualDressUp(
   const { modelPhotoDataUri, garmentPhotoDataUri, garmentDescription } = input;
 
   try {
-    // 2. Parse das imagens
+    // 2. Parse das imagens para extrair o base64
     const modelParsed = parseDataUri(modelPhotoDataUri);
     const garmentParsed = garmentPhotoDataUri ? parseDataUri(garmentPhotoDataUri) : undefined;
 
-    // 3. Montar partes multimodais
+    // 3. Montar partes multimodais no formato correto { inlineData: { data: ..., mimeType: ... } }
     const instruction = buildInstruction(garmentDescription, !!garmentParsed);
     console.log('[generateVirtualDressUp] Instruction:', instruction);
 
