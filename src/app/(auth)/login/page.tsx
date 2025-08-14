@@ -96,8 +96,8 @@ export default function LoginPage() {
         <Image
           src="/img/f3.jpg"
           alt="Fashion model"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{objectFit: 'cover'}}
           className="opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background shadow-lg"></div>
