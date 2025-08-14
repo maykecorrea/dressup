@@ -44,7 +44,7 @@ export async function generateVirtualDressUp(input: GenerateVirtualDressUpInput)
   } = input;
   
   try {
-    const promptParts = [
+    const promptParts: (string | { media: { url: string } } | { text: string })[] = [
         { media: { url: modelPhotoDataUri } },
         { text: `INSTRUÇÃO: Usando a foto da modelo como base, vista-a com a(s) seguinte(s) peça(s) de roupa: ${garmentDescription}. Mantenha o rosto e o corpo da modelo original. O resultado deve ser fotorrealista e de alta qualidade.` },
     ];
@@ -52,7 +52,7 @@ export async function generateVirtualDressUp(input: GenerateVirtualDressUpInput)
     // If a specific garment image is provided, add it to the prompt for better context
     if(garmentPhotoDataUri) {
         promptParts.splice(1, 0, { media: { url: garmentPhotoDataUri } });
-        promptParts[2].text = `INSTRUÇÃO: Usando a foto da modelo como base e a foto da peça como referência visual, vista a modelo com a seguinte peça: ${garmentDescription}. Mantenha o rosto e o corpo da modelo original. O resultado deve ser fotorrealista e de alta qualidade.`;
+        promptParts[2] = { text: `INSTRUÇÃO: Usando a foto da modelo como base e a foto da peça como referência visual, vista a modelo com a seguinte peça: ${garmentDescription}. Mantenha o rosto e o corpo da modelo original. O resultado deve ser fotorrealista e de alta qualidade.`};
     }
 
     const { media } = await ai.generate({
