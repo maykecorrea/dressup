@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useRef, ReactNode, useEffect } from 'react';
+import { useState, useRef, ReactNode, useEffect, MouseEvent as ReactMouseEvent } from 'react';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, ChevronDown, ChevronRight, FileText, RefreshCw } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, ChevronDown, ChevronRight, FileText, RefreshCw, Eye, ZoomIn, ZoomOut, Move } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,10 @@ import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Slider } from './ui/slider';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 
 // Custom Pants Icon
@@ -84,6 +88,14 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>(['top']);
+
+  // Zoom state
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLDivElement>(null);
+
 
   const handleLogout = async () => {
     try {
@@ -189,7 +201,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
           garmentDescription: garment.description,
-          garmentPhotoDataUri: garment.preview,
       });
 
       if (result.success && result.url) {
@@ -260,6 +271,101 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+  
+    // Zoom handlers
+    const resetZoomAndPosition = () => {
+        setZoom(1);
+        setPosition({ x: 0, y: 0 });
+    };
+
+    const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (zoom > 1) {
+            setIsDragging(true);
+            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (isDragging && imageRef.current) {
+            const newX = e.clientX - startDrag.x;
+            const newY = e.clientY - startDrag.y;
+            setPosition({ x: newX, y: newY });
+        }
+    };
+
+    const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+    
+    const ZoomableImageDialog = ({ src, alt }: { src: string; alt: string; }) => (
+        <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Eye className="h-5 w-5" />
+                        </Button>
+                    </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Visualizar com Zoom</p>
+                </TooltipContent>
+            </Tooltip>
+            <DialogContent
+                className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
+                onInteractOutside={(e) => e.preventDefault()}
+            >
+                <DialogTitle className="sr-only">{alt}</DialogTitle>
+                <div
+                    className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <div
+                        ref={imageRef}
+                        className={cn(
+                            "relative transition-transform duration-200",
+                            isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                        )}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                        }}
+                    >
+                        <Image src={src} alt={alt} layout="fill" objectFit="contain" />
+                    </div>
+                </div>
+                {zoom > 1 && (
+                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
+                        <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
+                        <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
+                    </div>
+                )}
+                <div className="flex items-center gap-4">
+                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))} />
+                    <Slider
+                        value={[zoom]}
+                        min={0.5}
+                        max={3}
+                        step={0.1}
+                        onValueChange={(value) => setZoom(value[0])}
+                    />
+                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.min(3, prev + 0.1))} />
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
 
   const GarmentSection = ({ type }: { type: Exclude<GarmentType, 'completeLook'> }) => {
     const garment = garments[type];
@@ -320,17 +426,20 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              )}
           </div>
           {garment.result ? (
-            <div className="grid grid-cols-2 gap-2">
-                <Button onClick={() => handleUseAsBase(garment.result)} variant="outline">Usar como Base</Button>
-                <Button onClick={() => handleSaveToGallery(garment.result)} disabled={isSaving}>
+             <div className="grid grid-cols-2 gap-2">
+                <Button onClick={() => handleUseAsBase(garment.result)} variant="outline" className="w-full">Usar como Base</Button>
+                <Button onClick={() => handleSaveToGallery(garment.result)} disabled={isSaving} className="w-full">
                     {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                 </Button>
-                <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook}>
-                    <RefreshCw/> Refazer
-                </Button>
-                <Button onClick={handleClear} variant="destructive">
-                    <Trash2 /> Limpar
-                </Button>
+                <div className="col-span-2 grid grid-cols-3 gap-2">
+                    <ZoomableImageDialog src={garment.result} alt={`${label} result`} />
+                    <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook}>
+                        <RefreshCw/> Refazer
+                    </Button>
+                    <Button onClick={handleClear} variant="destructive">
+                        <Trash2 /> Limpar
+                    </Button>
+                </div>
             </div>
           ) : (
              <Button onClick={() => handleGenerateLook(type)} disabled={!garment.description || garment.isGeneratingLook || !modelDataUri} className="w-full">
@@ -385,16 +494,22 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </div>
 
                 {completeLookState.result ? (
-                    <div className="grid grid-cols-2 gap-2">
-                         <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
-                        </Button>
-                         <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
-                            <RefreshCw/> Refazer
-                        </Button>
-                        <Button onClick={handleClear} variant="destructive" className="col-span-2">
-                            <Trash2 /> Limpar Look Completo
-                        </Button>
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button onClick={() => handleUseAsBase(completeLookState.result)} variant="outline">Usar como Base</Button>
+                            <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
+                                {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <ZoomableImageDialog src={completeLookState.result} alt="Look Completo Result" />
+                            <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
+                                <RefreshCw/> Refazer
+                            </Button>
+                            <Button onClick={handleClear} variant="destructive">
+                                <Trash2 /> Limpar
+                            </Button>
+                        </div>
                     </div>
                 ) : (
                     <Button onClick={handleGenerateCompleteLook} disabled={!hasAnyGarment || completeLookState.isGeneratingLook || !modelDataUri} className="w-full">
@@ -408,7 +523,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
 
   return (
-    <>
+    <TooltipProvider>
       <div className="flex justify-end mb-4 md:mb-8">
         <Button onClick={handleLogout} variant="outline">Sair</Button>
       </div>
@@ -492,6 +607,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              </Card>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
