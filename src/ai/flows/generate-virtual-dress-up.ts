@@ -114,6 +114,9 @@ export async function generateVirtualDressUp(
   } catch (e) {
     console.error('[generateVirtualDressUp] ERRO NA GERAÇÃO DE IMAGEM:', e);
     // Lança um erro mais genérico para o front-end, mas mantém o detalhe no log do servidor.
+    if (e instanceof Error) {
+        throw new Error(`Falha na API: ${e.message}`);
+    }
     throw new Error('Falha técnica ao chamar o gerador de imagem (detalhes no log do servidor).');
   }
 }
