@@ -5,12 +5,13 @@ import { initializeApp, getApp, getApps } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC-ol2jUWWedYHiUB-VYjndZvGu1o0ZLiI",
-  authDomain: "dressup-ai-3p45e.firebaseapp.com",
-  projectId: "dressup-ai-3p45e",
-  storageBucket: "dressup-ai-3p45e.appspot.com",
-  messagingSenderId: "1020285273907",
-  appId: "1:1020285273907:web:8f8c0f21b24c5ff06da046"
+  apiKey: "AIzaSyApntKP5d_Bw9gnq74-ps9HEq59kPKAgZw",
+  authDomain: "virtuoso-m0zfw.firebaseapp.com",
+  databaseURL: "https://virtuoso-m0zfw-default-rtdb.firebaseio.com/",
+  projectId: "virtuoso-m0zfw",
+  storageBucket: "virtuoso-m0zfw.appspot.com",
+  messagingSenderId: "734542053930",
+  appId: "1:734542053930:web:3e39cc9b246f53dc15b953"
 };
 
 // Initialize Firebase
