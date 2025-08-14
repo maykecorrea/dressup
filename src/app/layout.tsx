@@ -1,10 +1,11 @@
 import type {Metadata} from 'next';
-import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import './globals.css';
+import { AuthProvider } from '@/components/auth-provider';
 
 export const metadata: Metadata = {
-  title: 'Virtuoso',
-  description: 'Your personal virtual try-on assistant.',
+  title: 'Provador Virtual com IA',
+  description: 'Experimente roupas virtualmente com Inteligência Artificial',
 };
 
 export default function RootLayout({
@@ -13,14 +14,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster />
       </body>
     </html>
