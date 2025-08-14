@@ -14,7 +14,7 @@ export default function AuthLayout({
           layout="fill"
           objectFit="cover"
           className="opacity-90"
-          data-ai-hint="fashion runway"
+          data-ai-hint="fashion model"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background shadow-lg"></div>
       </div>
