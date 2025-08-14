@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useRef, ReactNode, useEffect, MouseEvent as ReactMouseEvent } from 'react';
+import { useState, useRef, ReactNode, MouseEvent as ReactMouseEvent } from 'react';
 import Image from 'next/image';
-import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, ChevronDown, ChevronRight, FileText, RefreshCw, Eye, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import { Loader2, Sparkles, Upload, Wand2, Shirt, Image as ImageIcon, Download, Save, Trash2, Footprints, Gem, Snowflake, Info, FileText, RefreshCw, Eye, ZoomIn, ZoomOut, Move } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -89,6 +90,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>(['top']);
 
+  // Low resolution warning state
+  const [lowResWarning, setLowResWarning] = useState<{ open: boolean; onAccept: (() => void) | null }>({ open: false, onAccept: null });
+
+
   // Zoom state
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -126,12 +131,32 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         toast({ title: "Erro na Descrição", description: result.error || "Algo deu errado.", variant: "destructive" });
     }
   };
-  
-  const processFile = (file: File, type: Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
+
+  const validateImageResolution = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+        const img = new window.Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const minDimension = Math.min(img.naturalWidth, img.naturalHeight);
+            URL.revokeObjectURL(img.src);
+            resolve(minDimension >= 1080);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src);
+            resolve(false); // Consider it invalid if it fails to load
+        };
+    });
+  };
+
+  const processFile = (file: File, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
     const reader = new FileReader();
     reader.onloadend = () => {
         const dataUri = reader.result as string;
-        if (type === 'completeLook') {
+        
+        if (type === 'model') {
+            setModelPreview(dataUri);
+            setModelDataUri(dataUri);
+        } else if (type === 'completeLook') {
             setCompleteLookState(prev => ({ ...prev, preview: dataUri }));
         } else {
             setGarments(prev => ({
@@ -147,43 +172,55 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     };
     reader.readAsDataURL(file);
   };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const isHighRes = await validateImageResolution(file);
+
+    const proceedWithUpload = () => processFile(file, type);
+
+    if (!isHighRes) {
+        setLowResWarning({ open: true, onAccept: proceedWithUpload });
+    } else {
+        proceedWithUpload();
+    }
+    
+    // Clear the input value to allow re-uploading the same file
+    event.target.value = '';
+  };
   
-  const handleMultipleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMultipleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-        // Distribute files according to the defined order
-        Array.from(files).forEach((file, index) => {
-            if (index < garmentOrder.length) {
-                const garmentType = garmentOrder[index];
-                processFile(file, garmentType);
+    if (!files) return;
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (i < garmentOrder.length) {
+            const garmentType = garmentOrder[i];
+            const isHighRes = await validateImageResolution(file);
+
+            const proceedWithUpload = () => processFile(file, garmentType);
+
+            if (!isHighRes) {
+                 toast({ title: `Imagem ${i+1} (${file.name}) em baixa resolução!`, description: "A qualidade do resultado pode ser afetada.", variant: "destructive" });
             }
-        });
-        if (files.length > 0) {
-            toast({
-                title: `${files.length} imagem(ns) carregadas!`,
-                description: "As peças foram adicionadas e as descrições estão sendo geradas."
-            });
+            // In multi-upload, we'll just warn and proceed. A modal for each would be too intrusive.
+            proceedWithUpload();
         }
     }
+
+    if (files.length > 0) {
+        toast({
+            title: `${files.length} imagem(ns) carregadas!`,
+            description: "As peças foram adicionadas e as descrições estão sendo geradas."
+        });
+    }
+
     event.target.value = '';
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
-    const file = event.target.files?.[0];
-    if (file) {
-        if(type === 'model'){
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const dataUri = reader.result as string;
-                setModelPreview(dataUri);
-                setModelDataUri(dataUri);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            processFile(file, type);
-        }
-    }
-  };
 
   const handleGenerateLook = async (type: Exclude<GarmentType, 'completeLook'>) => {
       const garment = garments[type];
@@ -524,6 +561,26 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
   return (
     <TooltipProvider>
+       <AlertDialog open={lowResWarning.open} onOpenChange={(open) => !open && setLowResWarning({ open: false, onAccept: null })}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Imagem em Baixa Resolução</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Coloque uma imagem em alta definição (mínimo 1080px) para que tenha um resultado melhor. Deseja continuar mesmo assim?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setLowResWarning({ open: false, onAccept: null })}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                        lowResWarning.onAccept?.();
+                        setLowResWarning({ open: false, onAccept: null });
+                    }}>
+                        Aceito
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
       <div className="flex justify-end mb-4 md:mb-8">
         <Button onClick={handleLogout} variant="outline">Sair</Button>
       </div>
@@ -610,3 +667,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
+
+    
