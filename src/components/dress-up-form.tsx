@@ -79,7 +79,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>('top');
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>(['top']);
 
   const handleLogout = async () => {
     try {
@@ -429,7 +429,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                       </AlertDescription>
                     </Alert>
 
-                    <Accordion type="single" collapsible className="w-full" value={activeAccordionItem} onValueChange={setActiveAccordionItem}>
+                    <Accordion type="multiple" className="w-full" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
                         {(Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).map(type => (
                             <AccordionItem value={type} key={type}>
                                 <AccordionTrigger className="text-base md:text-lg font-semibold hover:no-underline">
