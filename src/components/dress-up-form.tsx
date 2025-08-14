@@ -197,7 +197,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                <p className="font-semibold text-sm">Clique para enviar {label}</p>
                <p className="text-xs">PNG, JPG ou WEBP</p>
             </div>
-            {garment.preview && <Image src={garment.preview} alt={`${label} preview`} layout="fill" objectFit="contain" className="p-2"/>}
+            {garment.preview && <Image src={garment.preview} alt={`${label} preview`} fill style={{objectFit:"contain"}} className="p-2"/>}
             <Input
               type="file"
               accept="image/png, image/jpeg, image/webp"
@@ -233,7 +233,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              {garment.isGeneratingLook ? (
                 <div className="text-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /><p className="text-sm mt-2">Gerando look...</p></div>
              ) : garment.result ? (
-                <Image src={garment.result} alt={`${label} result`} layout="fill" objectFit="contain" className="p-2"/>
+                <Image src={garment.result} alt={`${label} result`} fill style={{objectFit:"contain"}} className="p-2"/>
              ) : (
                 <div className="text-center text-muted-foreground p-4">
                     <Sparkles className="mx-auto h-12 w-12 mb-2 text-secondary/50" />
@@ -281,7 +281,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                             <Upload className="h-10 w-10 mb-2" />
                             <p className="font-semibold">Clique para enviar</p>
                         </div>
-                        {modelPreview && <Image src={modelPreview} alt="Modelo" layout="fill" objectFit="contain" className="p-2"/>}
+                        {modelPreview && <Image src={modelPreview} alt="Modelo" fill style={{objectFit:"contain"}} className="p-2"/>}
                         <Input
                             type="file"
                             accept="image/png, image/jpeg, image/webp"
@@ -323,3 +323,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
+
+    
