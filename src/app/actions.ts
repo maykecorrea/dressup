@@ -1,9 +1,12 @@
 'use server';
 
 import { generateVirtualDressUp } from '@/ai/flows/generate-virtual-dress-up';
-import { generateGarmentDescription } from '@/ai/flows/generate-garment-description';
 import { z } from 'zod';
 
+// This function is no longer needed as we are not generating descriptions separately.
+// You can remove it or keep it for future reference. For now, it's commented out.
+/*
+import { generateGarmentDescription } from '@/ai/flows/generate-garment-description';
 const GenerateDescriptionSchema = z.object({
     garmentPhotoDataUri: z.string().min(1, 'A imagem da roupa é obrigatória.'),
 });
@@ -25,12 +28,14 @@ export async function performGenerateDescription(values: z.infer<typeof Generate
         return { success: false, error: errorMessage };
     }
 }
-
+*/
 
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
-  garmentPhotoDataUri: z.string().min(1, 'A imagem da roupa principal é obrigatória.'),
-  garmentDescription: z.string().min(1, 'A descrição da roupa é obrigatória.'),
+  // We now pass the garment image URI directly to the main function
+  garmentPhotoDataUri: z.string().optional(),
+  // The description is now a simple placeholder, the real work is done by the image.
+  garmentDescription: z.string(),
   positivePrompt: z.string(),
   negativePrompt: z.string(),
   customStylePrompt: z.string().optional(),

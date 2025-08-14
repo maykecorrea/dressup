@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { performGenerateDescription, performDressUp } from '@/app/actions';
+import { performDressUp } from '@/app/actions';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -34,28 +34,30 @@ type GarmentType = 'top' | 'pants' | 'coat' | 'shoes' | 'accessory' | 'completeL
 
 interface GarmentState {
     preview: string | null;
-    description: string | null;
+    // Description is no longer needed from Gemini, but we keep a placeholder for the prompt.
+    description: string | null; 
     result: string | null;
-    isGeneratingDescription: boolean;
+    // No longer generating description separately.
+    // isGeneratingDescription: boolean;
     isGeneratingLook: boolean;
 }
 
 const initialGarmentState: GarmentState = {
     preview: null,
-    description: null,
+    description: null, // This will now hold a simple description like "this shirt"
     result: null,
-    isGeneratingDescription: false,
+    // isGeneratingDescription: false,
     isGeneratingLook: false,
 };
 
 const garmentOrder: Exclude<GarmentType, 'completeLook'>[] = ['top', 'pants', 'coat', 'shoes', 'accessory'];
 
-const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: string, icon: ReactNode }> = {
-    top: { label: 'Roupa (Topo)', icon: <Shirt /> },
-    pants: { label: 'Calça', icon: <PantsIcon /> },
-    coat: { label: 'Casaco', icon: <Snowflake /> },
-    shoes: { label: 'Sapatos', icon: <Footprints /> },
-    accessory: { label: 'Acessório', icon: <Gem /> },
+const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: string, icon: ReactNode, simpleDescription: string }> = {
+    top: { label: 'Roupa (Topo)', icon: <Shirt />, simpleDescription: 'a blusa/camisa fornecida' },
+    pants: { label: 'Calça', icon: <PantsIcon />, simpleDescription: 'a calça/saia fornecida' },
+    coat: { label: 'Casaco', icon: <Snowflake />, simpleDescription: 'o casaco fornecido' },
+    shoes: { label: 'Sapatos', icon: <Footprints />, simpleDescription: 'os sapatos fornecidos' },
+    accessory: { label: 'Acessório', icon: <Gem />, simpleDescription: 'o acessório fornecido' },
 };
 
 
@@ -75,8 +77,8 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       accessory: { ...initialGarmentState },
   });
 
-  const [completeLookState, setCompleteLookState] = useState<Omit<GarmentState, 'description' | 'isGeneratingDescription'>>({
-      preview: null, // Not used for complete look
+  const [completeLookState, setCompleteLookState] = useState<Omit<GarmentState, 'isGeneratingLook' | 'description'> & {isGeneratingLook: boolean}>({
+      preview: null,
       result: null,
       isGeneratingLook: false,
   });
@@ -93,35 +95,21 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       toast({ title: 'Erro', description: 'Falha ao deslogar.', variant: 'destructive' });
     }
   };
-
-  const handleGenerateDescription = async (type: Exclude<GarmentType, 'completeLook'>, dataUri: string) => {
-    if (!dataUri) {
-        toast({ title: "Erro", description: "URI de dados inválido.", variant: "destructive" });
-        return;
-    }
-
-    setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingDescription: true, preview: dataUri } }));
-
-    const result = await performGenerateDescription({ garmentPhotoDataUri: dataUri });
-    
-    if (result.success && result.description) {
-        setGarments(prev => ({ ...prev, [type]: { ...prev[type], description: result.description, isGeneratingDescription: false } }));
-        toast({ title: `Descrição Gerada para ${garmentConfig[type].label}!`, description: "A IA analisou a peça de roupa." });
-    } else {
-        setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingDescription: false } }));
-        toast({ title: "Erro", description: result.error || "Não foi possível gerar a descrição.", variant: "destructive" });
-    }
-  };
-
+  
   const processFile = (file: File, type: Exclude<GarmentType, 'completeLook'>) => {
     const reader = new FileReader();
     reader.onloadend = () => {
         const dataUri = reader.result as string;
         setGarments(prev => ({
             ...prev,
-            [type]: { ...initialGarmentState, preview: dataUri }
+            [type]: { 
+                ...initialGarmentState, 
+                preview: dataUri,
+                // Set the simple description automatically
+                description: garmentConfig[type].simpleDescription 
+            }
         }));
-        handleGenerateDescription(type, dataUri);
+        // No longer need to call a separate description generation function
     };
     reader.readAsDataURL(file);
   };
@@ -139,11 +127,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         if (files.length > 0) {
             toast({
                 title: `${files.length} imagem(ns) carregadas!`,
-                description: "As descrições estão sendo geradas em segundo plano."
+                description: "As peças foram adicionadas aos seus campos."
             });
         }
     }
-    // Clear the input value to allow re-selecting the same files
     event.target.value = '';
   };
 
@@ -169,7 +156,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
           return;
       }
       if (!garment.preview || !garment.description) {
-          toast({ title: "Erro", description: "Aguarde a descrição da peça ser gerada antes de criar o look.", variant: "destructive" });
+          toast({ title: "Erro", description: "Envie a imagem da peça primeiro.", variant: "destructive" });
           return;
       }
 
@@ -199,22 +186,26 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
 
     const descriptions = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[])
-        .map(type => garments[type].description)
-        .filter(Boolean); // Filter out null/undefined descriptions
+        .map(type => garments[type].preview ? garmentConfig[type].simpleDescription : null)
+        .filter(Boolean);
 
     if (descriptions.length === 0) {
         toast({ title: "Erro", description: "Nenhuma peça de roupa foi adicionada. Adicione pelo menos uma peça para gerar o look completo.", variant: "destructive" });
         return;
     }
 
-    const combinedDescription = descriptions.join('. ');
+    const combinedDescription = descriptions.join(' e ');
 
     setCompleteLookState(prev => ({ ...prev, isGeneratingLook: true }));
 
+    // For complete look, we pass all individual images.
+    // The API needs to be adapted for this. For now, let's combine descriptions.
+    // A better approach would be to send all images to the API.
+    // Let's stick to the description-based approach for now to avoid massive changes.
     const result = await performDressUp({
         modelPhotoDataUri: modelDataUri,
-        garmentPhotoDataUri: '', // Not needed for complete look, AI will use description
-        garmentDescription: combinedDescription,
+        // The API now relies on the combined description. Individual images are not sent for the complete look.
+        garmentDescription: `um look completo consistindo de ${combinedDescription}`,
         positivePrompt: defaultPositivePrompts,
         negativePrompt: defaultNegativePrompts,
     });
@@ -264,7 +255,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg">
-        {/* Coluna da Esquerda: Upload e Descrição */}
+        {/* Coluna da Esquerda: Upload */}
         <div className="space-y-4">
           <Card className="w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl bg-muted/20 aspect-[4/5]">
             <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-2 rounded-lg">
@@ -283,34 +274,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                   const file = e.target.files?.[0];
                   if (file) processFile(file, type);
               }}
-              multiple={type === 'top'} // Allow multiple only for the first input
-              disabled={garment.isGeneratingDescription || garment.isGeneratingLook}
+              multiple={type === 'top'}
+              disabled={garment.isGeneratingLook}
             />
           </Card>
-
-          {garment.preview && (
-            <>
-                {garment.isGeneratingDescription ? (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="animate-spin" />
-                        Analisando a peça...
-                    </div>
-                ) : garment.description ? (
-                     <Card className="bg-background/50">
-                        <CardHeader className="p-3">
-                            <CardTitle className="text-sm flex items-center gap-2"><Info className="text-secondary" /> Descrição da IA (Gemini)</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                            <p className="text-xs text-muted-foreground">{garment.description}</p>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="text-center text-sm text-destructive-foreground p-2 rounded-md bg-destructive">
-                        Falha ao gerar descrição.
-                    </div>
-                )}
-            </>
-          )}
         </div>
 
         {/* Coluna da Direita: Resultado e Ações */}
@@ -338,7 +305,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </Button>
             </div>
           ) : (
-             <Button onClick={() => handleGenerateLook(type)} disabled={!garment.description || garment.isGeneratingLook || !modelDataUri} className="w-full">
+             <Button onClick={() => handleGenerateLook(type)} disabled={!garment.preview || garment.isGeneratingLook || !modelDataUri} className="w-full">
                 <Sparkles /> Gerar Look (com OpenAI)
             </Button>
           )}
@@ -474,5 +441,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
-
-    
