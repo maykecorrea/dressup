@@ -17,7 +17,7 @@ export const ai = genkit({
     googleAI({
       apiKey: process.env.GEMINI_API_KEY,
     }),
-    new Dotprompt(),
+    new Dotprompt({}),
     googleCloud(),
   ],
   logSinks: [],
