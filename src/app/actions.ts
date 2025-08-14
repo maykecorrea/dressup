@@ -1,12 +1,11 @@
+
 'use server';
 
 import { generateVirtualDressUp } from '@/ai/flows/generate-virtual-dress-up';
+import { generateGarmentDescription } from '@/ai/flows/generate-garment-description';
 import { z } from 'zod';
 
-// This function is no longer needed as we are not generating descriptions separately.
-// You can remove it or keep it for future reference. For now, it's commented out.
-/*
-import { generateGarmentDescription } from '@/ai/flows/generate-garment-description';
+
 const GenerateDescriptionSchema = z.object({
     garmentPhotoDataUri: z.string().min(1, 'A imagem da roupa é obrigatória.'),
 });
@@ -24,17 +23,16 @@ export async function performGenerateDescription(values: z.infer<typeof Generate
         }
         return { success: true, description: result.description };
     } catch (error) {
+        console.error('Error in performGenerateDescription:', error);
         const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado.';
         return { success: false, error: errorMessage };
     }
 }
-*/
+
 
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
-  // We now pass the garment image URI directly to the main function
   garmentPhotoDataUri: z.string().optional(),
-  // The description is now a simple placeholder, the real work is done by the image.
   garmentDescription: z.string(),
   positivePrompt: z.string(),
   negativePrompt: z.string(),
@@ -54,6 +52,7 @@ export async function performDressUp(values: z.infer<typeof ActionInputSchema>) 
     }
     return { success: true, url: result.dressedUpPhotoDataUri };
   } catch (error) {
+    console.error('Error in performDressUp:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado.';
     return { success: false, error: errorMessage };
   }
