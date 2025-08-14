@@ -33,8 +33,7 @@ const EnhanceVirtualDressUpWithPositivePromptsOutputSchema = z.object({
   dressedUpResult: z
     .string()
     .describe(
-      'The final image of the model wearing the new outfit, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
-    ),
+      'The final image of the model wearing the new outfit, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'    ),
 });
 export type EnhanceVirtualDressUpWithPositivePromptsOutput = z.infer<typeof EnhanceVirtualDressUpWithPositivePromptsOutputSchema>;
 

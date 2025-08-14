@@ -21,6 +21,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2,LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Image from "next/image";
+
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -89,46 +91,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-        <div className="text-center mb-10">
-            <h1 className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Bem-Vindo de Volta!</h1>
-            <p className="text-muted-foreground mt-2">Faça login para continuar sua jornada fashion.</p>
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
+      <div className="relative flex-1 hidden lg:block">
+        <Image
+          src="/img/f3.jpg"
+          alt="Fashion model"
+          layout="fill"
+          objectFit="cover"
+          className="opacity-90"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background shadow-lg"></div>
+      </div>
+      <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
+        <div className="w-full max-w-md">
+           <div className="text-center mb-10">
+              <h1 className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Bem-Vindo de Volta!</h1>
+              <p className="text-muted-foreground mt-2">Faça login para continuar sua jornada fashion.</p>
+          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="seuemail@exemplo.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full font-bold bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2"/> Entrar</> }
+            </Button>
+          </form>
+        </Form>
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <ClientOnlyLinks />
         </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="seuemail@exemplo.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Senha</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="********" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full font-bold bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:shadow-lg hover:scale-105 transition-transform" disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2"/> Entrar</> }
-          </Button>
-        </form>
-      </Form>
-      <div className="mt-6 text-center text-sm text-muted-foreground">
-        <ClientOnlyLinks />
+        </div>
       </div>
     </div>
   );
