@@ -119,31 +119,29 @@ export function GallerySection({ showBackButton = true, onImageDeleted }: Galler
     return (
         <TooltipProvider>
             <section>
-                <header className="flex items-center justify-between mb-12">
-                    <div className="flex items-center gap-4">
+                <header className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 md:mb-12">
+                    <div className="flex items-center gap-3">
                         {showBackButton && (
-                            <Button asChild variant="outline" size="icon">
+                            <Button asChild variant="outline" size="icon" className="shrink-0">
                                 <Link href="/app">
                                     <ArrowLeft />
                                 </Link>
                             </Button>
                         )}
-                        <div className="flex items-center gap-3">
-                            <GalleryVertical className="h-10 w-10 text-secondary" />
-                            <div>
-                                <h2 className="text-4xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">
-                                    Galeria de Looks
-                                </h2>
-                                <p className="text-muted-foreground mt-1 text-lg">
-                                    Explore, baixe ou exclua os looks incríveis que foram criados.
-                                </p>
-                            </div>
+                        <GalleryVertical className="h-10 w-10 text-secondary shrink-0" />
+                        <div>
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">
+                                Galeria de Looks
+                            </h2>
+                            <p className="text-muted-foreground mt-1 text-sm sm:text-base lg:text-lg">
+                                Explore, baixe ou exclua os looks que foram criados.
+                            </p>
                         </div>
                     </div>
                 </header>
 
                 {images.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                         {images.map((src, index) => (
                             <Card key={index} className="overflow-hidden group relative">
                                 <CardContent className="p-0">

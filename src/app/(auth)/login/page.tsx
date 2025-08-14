@@ -102,11 +102,11 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background shadow-lg"></div>
       </div>
-      <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
+      <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md">
            <div className="text-center mb-10">
-              <h1 className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Bem-Vindo de Volta!</h1>
-              <p className="text-muted-foreground mt-2">Faça login para continuar sua jornada fashion.</p>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Bem-Vindo de Volta!</h1>
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">Faça login para continuar sua jornada fashion.</p>
           </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

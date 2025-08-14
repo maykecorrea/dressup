@@ -261,7 +261,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 border rounded-lg">
         {/* Coluna da Esquerda: Upload e Descrição */}
         <div className="space-y-4">
           <Card className="w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl bg-muted/20 aspect-[4/5]">
@@ -337,7 +337,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 border rounded-lg">
             <div className="space-y-4 md:col-span-2 flex flex-col items-center">
                 <div className="aspect-[4/5] w-full max-w-md rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative">
                     {completeLookState.isGeneratingLook ? (
@@ -353,7 +353,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </div>
 
                 {completeLookState.result ? (
-                    <div className="grid grid-cols-2 gap-2 w-full max-w-md">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
                         <Button onClick={() => handleSaveToGallery(completeLookState.result)} disabled={isSaving}>
                             {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar na Galeria
                         </Button>
@@ -374,16 +374,16 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
   return (
     <>
-      <div className="flex justify-end mb-8">
+      <div className="flex justify-end mb-4 md:mb-8">
         <Button onClick={handleLogout} variant="outline">Sair</Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-start">
         {/* Coluna da Modelo */}
-        <div className="lg:col-span-1 space-y-4 sticky top-8">
+        <div className="md:col-span-1 lg:col-span-1 space-y-4 md:sticky top-8">
             <Card className="shadow-xl bg-gradient-to-br from-card to-muted/20">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-2xl"><ImageIcon className="text-secondary" />Modelo Base</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><ImageIcon className="text-secondary" />Modelo Base</CardTitle>
                     <CardDescription>Envie a foto do(a) modelo. Esta será a base para todas as gerações.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -405,17 +405,17 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         </div>
 
         {/* Coluna das Peças */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="md:col-span-1 lg:col-span-2 space-y-6">
              <Card className="shadow-xl">
                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-2xl"><Wand2 className="text-secondary"/> Criador de Looks</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><Wand2 className="text-secondary"/> Criador de Looks</CardTitle>
                     <CardDescription>Adicione as peças de roupa e deixe a IA trabalhar. Cada peça é analisada e aplicada separadamente.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Alert className="mb-6 border-secondary/50 text-center">
                       <Info className="h-5 w-5"/>
                       <AlertTitle className="text-lg font-bold">Importante: Siga a Ordem para Upload Múltiplo!</AlertTitle>
-                      <AlertDescription className="text-base">
+                      <AlertDescription className="text-sm md:text-base">
                         Ao adicionar mais de uma imagem, selecione-as na ordem correta para que sejam preenchidas nos lugares certos:
                         <br/>
                         <strong className="text-secondary">1º Roupa (Topo) → 2º Calça → 3º Casaco → 4º Sapatos → 5º Acessório</strong>
@@ -427,7 +427,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     <Accordion type="single" collapsible className="w-full" value={activeAccordionItem} onValueChange={setActiveAccordionItem}>
                         {(Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).map(type => (
                             <AccordionItem value={type} key={type}>
-                                <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                                <AccordionTrigger className="text-base md:text-lg font-semibold hover:no-underline">
                                     <div className="flex items-center gap-3">
                                         <div className="text-secondary">{garmentConfig[type].icon}</div>
                                         {garmentConfig[type].label}
@@ -439,7 +439,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                             </AccordionItem>
                         ))}
                          <AccordionItem value="completeLook">
-                            <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                            <AccordionTrigger className="text-base md:text-lg font-semibold hover:no-underline">
                                 <div className="flex items-center gap-3">
                                     <Sparkles className="text-secondary" />
                                     Look Completo

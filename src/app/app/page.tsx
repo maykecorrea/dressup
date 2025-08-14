@@ -8,8 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { GallerySection } from '@/components/gallery-section';
 import { Separator } from '@/components/ui/separator';
-import { useState, useTransition } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 function AppPage() {
   const [imagesVersion, setImagesVersion] = useState(0);
@@ -24,13 +23,13 @@ function AppPage() {
 
 
   return (
-    <main className="container mx-auto px-4 py-8 md:py-12">
+    <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
       <header className="text-center mb-12">
-        <div className="inline-flex items-center gap-4 bg-card p-4 rounded-xl shadow-lg bg-gradient-to-r from-primary/10 to-transparent">
-            <Shirt className="h-12 w-12 text-secondary animate-pulse" />
-            <h1 className="text-5xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Provador Virtual IA</h1>
+        <div className="inline-flex flex-wrap justify-center items-center gap-2 md:gap-4 bg-card p-4 rounded-xl shadow-lg bg-gradient-to-r from-primary/10 to-transparent">
+            <Shirt className="h-10 w-10 md:h-12 md:w-12 text-secondary animate-pulse" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-pulse">Provador Virtual IA</h1>
         </div>
-        <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-lg">
+        <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-base md:text-lg">
           Experimente qualquer roupa virtualmente. Envie uma foto sua ou de um(a) modelo, selecione uma peça de roupa e deixe nossa IA criar o look perfeito.
         </p>
          <div className="mt-6">
@@ -43,12 +42,12 @@ function AppPage() {
           </div>
       </header>
 
-      <div className="mb-12 p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card shadow-lg border border-primary/20">
-        <h2 className="text-3xl font-headline font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-pink-500 animate-pulse">
-          <Lightbulb className="inline-block h-8 w-8 mr-2 text-secondary" />
+      <div className="mb-12 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card shadow-lg border border-primary/20">
+        <h2 className="text-2xl md:text-3xl font-headline font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-pink-500 animate-pulse">
+          <Lightbulb className="inline-block h-7 w-7 md:h-8 md:w-8 mr-2 text-secondary" />
           Dicas para um Resultado Perfeito
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-center">
           <div className="p-4 rounded-lg bg-card/50">
             <ThumbsUp className="h-10 w-10 mx-auto text-secondary mb-3"/>
             <h3 className="font-semibold text-lg text-foreground mb-1">Melhores Fotos</h3>
@@ -78,9 +77,9 @@ function AppPage() {
       />
 
       <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary/10 via-muted to-secondary/10 px-6 py-3 shadow-lg">
+          <div className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary/10 via-muted to-secondary/10 px-4 py-2 md:px-6 md:py-3 shadow-lg">
               <Rocket className="h-6 w-6 text-secondary animate-pulse" />
-              <p className="font-semibold text-muted-foreground tracking-wide">Em breve, mais novidades!</p>
+              <p className="font-semibold text-muted-foreground tracking-wide text-sm md:text-base">Em breve, mais novidades!</p>
           </div>
       </div>
     </main>
