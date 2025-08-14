@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -18,7 +17,7 @@ export const ai = genkit({
     googleAI({
       apiKey: process.env.GEMINI_API_KEY,
     }),
-    Dotprompt(),
+    new Dotprompt(),
     googleCloud(),
   ],
   logSinks: [],
