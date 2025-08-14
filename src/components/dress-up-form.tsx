@@ -23,9 +23,6 @@ const PantsIcon = () => (
     </svg>
 );
 
-const defaultPositivePrompts = "alta qualidade, fotorrealista, fotografia profissional, iluminação natural, ajuste perfeito, sombreamento realista, alto detalhe, foco nítido, 8k, look completo e coeso";
-const defaultNegativePrompts = "feio, deformado, borrado, má qualidade, má anatomia, membros extras, dedos extras, mãos mal desenhadas, pés mal desenhadas, rosto mal desenhado, fora de quadro, azulejos, desfigurado, corpo fora de quadro, marca d'água, assinatura, cortado, baixo contraste, subexposto, superexposto, arte ruim, iniciante, amador, irrealista, caricato, artefatos, rosto diferente, outra pessoa, mudar o rosto, mudar o cabelo, imagem cortada, corte, zoom, enquadramento diferente, pose diferente";
-
 interface DressUpFormProps {
   onImageSaved: () => void;
 }
@@ -183,9 +180,8 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
+          garmentPhotoDataUri: garment.preview,
           garmentDescription: garment.description,
-          positivePrompt: defaultPositivePrompts,
-          negativePrompt: defaultNegativePrompts,
       });
 
       if (result.success && result.url) {
@@ -219,8 +215,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     const result = await performDressUp({
         modelPhotoDataUri: modelDataUri,
         garmentDescription: `um look completo consistindo de ${combinedDescription}`,
-        positivePrompt: defaultPositivePrompts,
-        negativePrompt: defaultNegativePrompts,
     });
 
     if (result.success && result.url) {
@@ -328,7 +322,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
             </div>
           ) : (
              <Button onClick={() => handleGenerateLook(type)} disabled={!garment.description || garment.isGeneratingLook || !modelDataUri} className="w-full">
-                <Sparkles /> Gerar Look (com OpenAI)
+                <Sparkles /> Gerar Look
             </Button>
           )}
         </div>

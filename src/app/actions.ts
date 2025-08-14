@@ -32,10 +32,8 @@ export async function performGenerateDescription(values: z.infer<typeof Generate
 
 const ActionInputSchema = z.object({
   modelPhotoDataUri: z.string().min(1, 'A imagem do modelo é obrigatória.'),
+  garmentPhotoDataUri: z.string().optional(),
   garmentDescription: z.string(),
-  positivePrompt: z.string(),
-  negativePrompt: z.string(),
-  customStylePrompt: z.string().optional(),
 });
 
 export async function performDressUp(values: z.infer<typeof ActionInputSchema>) {
