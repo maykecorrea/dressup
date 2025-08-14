@@ -406,6 +406,9 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         />
                     </div>
                 </CardContent>
+                <CardFooter>
+                    <p className="text-xs text-muted-foreground text-center w-full">Toda vez que reutilizar o modelo como base, existe uma leve perca de qualidade.</p>
+                </CardFooter>
             </Card>
         </div>
 
@@ -462,3 +465,4 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </>
   );
 }
+
