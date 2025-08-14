@@ -282,18 +282,18 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
               disabled={garment.isGeneratingLook || garment.isGeneratingDescription}
             />
           </Card>
-          <Card className="h-40">
-                <CardHeader className="p-3">
-                    <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 text-sm">
-                    {garment.isGeneratingDescription ? (
-                        <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> Gerando...</div>
-                    ) : (
-                        <p className="text-muted-foreground">{garment.description || "Aguardando imagem para gerar descrição..."}</p>
-                    )}
-                </CardContent>
-            </Card>
+          <Card className="min-h-[10rem] flex flex-col">
+              <CardHeader className="p-3">
+                  <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0 text-sm flex-grow">
+                  {garment.isGeneratingDescription ? (
+                      <div className="flex items-center gap-2 h-full"><Loader2 className="animate-spin" /> Gerando...</div>
+                  ) : (
+                      <p className="text-muted-foreground break-words">{garment.description || "Aguardando imagem para gerar descrição..."}</p>
+                  )}
+              </CardContent>
+          </Card>
         </div>
 
         {/* Coluna da Direita: Resultado e Ações */}
@@ -378,9 +378,9 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         <Button onClick={handleLogout} variant="outline">Sair</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
         {/* Coluna da Modelo */}
-        <div className="md:col-span-1 lg:col-span-1 space-y-4 md:sticky top-8">
+        <div className="lg:col-span-1 space-y-4 md:sticky top-8">
             <Card className="shadow-xl bg-gradient-to-br from-card to-muted/20">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><ImageIcon className="text-secondary" />Modelo Base</CardTitle>
@@ -405,7 +405,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         </div>
 
         {/* Coluna das Peças */}
-        <div className="md:col-span-1 lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
              <Card className="shadow-xl">
                  <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><Wand2 className="text-secondary"/> Criador de Looks</CardTitle>
