@@ -193,6 +193,16 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         if (type === 'model') {
             setModelPreview(dataUri);
             setModelDataUri(dataUri);
+            // Reset all garment states when a new model is uploaded
+            setGarments({
+                top: { ...initialGarmentState },
+                pants: { ...initialGarmentState },
+                coat: { ...initialGarmentState },
+                shoes: { ...initialGarmentState },
+                accessory: { ...initialGarmentState },
+            });
+            setCompleteLookState({ ...initialGarmentState });
+            toast({ title: "Nova modelo carregada!", description: "Todas as peças anteriores foram limpas." });
         } else if (type === 'completeLook') {
             setCompleteLookState(prev => ({
                 ...initialGarmentState,
