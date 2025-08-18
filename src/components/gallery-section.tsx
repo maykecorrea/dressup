@@ -82,10 +82,8 @@ export function GallerySection({ showBackButton = true, onImageDeleted }: Galler
 
     const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
         e.preventDefault();
-        if (zoom > 1) {
-            setIsDragging(true);
-            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
-        }
+        setIsDragging(true);
+        setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
     };
 
     const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -184,7 +182,7 @@ export function GallerySection({ showBackButton = true, onImageDeleted }: Galler
                                                         ref={imageRef}
                                                         className={cn(
                                                             "relative transition-transform duration-200",
-                                                            isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                                                            isDragging ? 'cursor-grabbing' : 'cursor-grab'
                                                         )}
                                                         style={{
                                                             width: '100%',
