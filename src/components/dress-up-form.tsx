@@ -511,7 +511,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
           </Card>
           <Card className="flex flex-col min-h-[10rem]">
               <CardHeader className="p-3">
-                  <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição</CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 text-sm flex-grow">
                   {garment.isGeneratingDescription ? (
@@ -587,7 +587,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </Card>
                  <Card className="flex flex-col min-h-[10rem]">
                     <CardHeader className="p-3">
-                        <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
+                        <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 text-sm flex-grow">
                         {completeLookState.isGeneratingDescription ? (
@@ -766,3 +766,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
+
+    
