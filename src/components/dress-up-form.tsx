@@ -29,6 +29,37 @@ const PantsIcon = () => (
     </svg>
 );
 
+// Re-implementing library helpers locally to avoid import issues.
+function dataURLtoFile(dataurl: string, filename: string): File {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) {
+      throw new Error('Could not parse mime type from data URL');
+    }
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+}
+
+function getDataUrlFromFile(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result as string);
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+
 interface DressUpFormProps {
   onImageSaved: () => void;
 }
@@ -302,7 +333,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     if (!imageDataUri) return;
     setIsSaving(true);
     try {
-        const imageFile = await imageCompression.dataURLtoFile(imageDataUri, 'compressed-image.jpg');
+        const imageFile = dataURLtoFile(imageDataUri, 'compressed-image.jpg');
 
         const options = {
             maxSizeMB: 0.2, // (max 200KB)
@@ -311,7 +342,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         };
 
         const compressedFile = await imageCompression(imageFile, options);
-        const compressedDataUri = await imageCompression.getDataUrlFromFile(compressedFile);
+        const compressedDataUri = await getDataUrlFromFile(compressedFile);
 
         const gallery = JSON.parse(localStorage.getItem('virtual-dress-up-gallery') || '[]');
         gallery.unshift(compressedDataUri);
@@ -374,18 +405,20 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
     const ZoomableImage = ({src, alt}: {src: string; alt: string}) => (
          <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                     <DialogTrigger asChild>
-                         <div className="w-full h-full relative cursor-zoom-in group">
-                             <Image src={src} alt={alt} fill style={{objectFit:"contain"}} className="p-2 transition-transform duration-300 group-hover:scale-105"/>
-                         </div>
-                     </DialogTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Clique para dar zoom</p>
-                </TooltipContent>
-            </Tooltip>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <DialogTrigger asChild>
+                             <div className="w-full h-full relative cursor-zoom-in group">
+                                 <Image src={src} alt={alt} fill style={{objectFit:"contain"}} className="p-2 transition-transform duration-300 group-hover:scale-105"/>
+                             </div>
+                         </DialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Clique para dar zoom</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
             <DialogContent
                 className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
                 onInteractOutside={(e) => e.preventDefault()}
@@ -598,7 +631,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
 
   return (
-    <TooltipProvider>
+    <>
        <AlertDialog open={lowResWarning.open} onOpenChange={(open) => !open && setLowResWarning({ open: false, onAccept: null })}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -702,8 +735,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              </Card>
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 }
+
+    
 
     
