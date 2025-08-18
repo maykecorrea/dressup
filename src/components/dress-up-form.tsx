@@ -702,7 +702,11 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              <Card className="shadow-xl">
                  <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><Wand2 className="text-secondary"/> Criador de Looks</CardTitle>
-                    <CardDescription>Adicione as peças de roupa e deixe a IA trabalhar. Cada peça é analisada e aplicada separadamente.</CardDescription>
+                    <CardDescription>
+                        Adicione as peças de roupa e deixe a IA trabalhar. Cada peça é analisada e aplicada separadamente.
+                        <br/>
+                        <span className="font-semibold text-secondary/90">Ao adicionar uma imagem, a IA irá focar exclusivamente naquela peça e na parte do corpo correspondente para criar o resultado.</span>
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Alert className="mb-6 border-secondary/50 text-center">
