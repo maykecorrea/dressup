@@ -174,7 +174,7 @@ const ZoomableImage = ({src, alt}: {src: string; alt: string}) => {
                         <Image src={src} alt={alt} layout="fill" objectFit="contain" />
                     </div>
                 </div>
-                {zoom > 1 && (
+                {isDragging && (
                     <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
                         <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
                         <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
@@ -702,19 +702,20 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              <Card className="shadow-xl">
                  <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl md:text-2xl"><Wand2 className="text-secondary"/> Criador de Looks</CardTitle>
-                    <CardDescription>
-                        Adicione as peças de roupa e deixe a IA trabalhar. Cada peça é analisada e aplicada separadamente.
-                        <br/>
-                        <span className="font-semibold text-secondary/90">Ao adicionar uma imagem, a IA irá focar exclusivamente naquela peça e na parte do corpo correspondente para criar o resultado.</span>
-                        <div className="mt-4 space-y-3">
-                            <p className="text-sm text-foreground font-semibold">
-                                DICA: Para fundir as peças e ver o resultado integral com melhor qualidade, gere 1 imagem de cada peça e depois use a magia do "Gerador de Look Completo" para ele combinar tudo. Para um look de referência, adicione a imagem com fundo branco para melhores resultados.
+                     <CardDescription asChild>
+                        <div className="space-y-4 pt-2 text-sm">
+                            <p className="text-foreground">
+                                DICA: Para fundir as peças e ver o resultado integral com a melhor qualidade, “Gere Look individual” e depois ao  final use o "Gerador de Look Completo" para combinar tudo. 
                             </p>
-                            <div className="space-y-2 text-sm">
-                                <p className="text-destructive font-bold animate-pulse-destructive">NÃO adicione uma roupa com o fundo da mesma cor da peça.</p>
-                                <p className="text-destructive font-bold animate-pulse-destructive">NÃO coloque roupas amassadas ou dobradas para que a IA tenha noção de tamanho e profundidade.</p>
-                                <p className="text-destructive font-bold animate-pulse-destructive">NÃO envie imagens muito pesadas ou grandes para não sobrecarregar a ferramenta.</p>
-                                <p className="text-destructive font-bold animate-pulse-destructive">Dê preferência a fotos frontais e bem iluminadas tanto do modelo quanto das peças.</p>
+                            <div>
+                                <p className="text-foreground font-semibold">Para um look de referência:</p>
+                                <ul className="mt-2 space-y-1.5">
+                                    <li className="text-destructive font-bold animate-pulse-destructive">- Adicione a imagem com fundo branco para melhores resultados.</li>
+                                    <li className="text-destructive font-bold animate-pulse-destructive">- NÃO adicione uma roupa com o fundo da mesma cor da peça.</li>
+                                    <li className="text-destructive font-bold animate-pulse-destructive">- NÃO coloque roupas amassadas ou dobradas para que a IA tenha noção de tamanho e profundidade.</li>
+                                    <li className="text-destructive font-bold animate-pulse-destructive">- NÃO envie imagens muito pesadas ou grandes para não sobrecarregar a ferramenta.</li>
+                                    <li className="text-destructive font-bold animate-pulse-destructive">- Dê preferência a fotos frontais e bem iluminadas tanto do modelo quanto das peças.</li>
+                                </ul>
                             </div>
                         </div>
                     </CardDescription>
