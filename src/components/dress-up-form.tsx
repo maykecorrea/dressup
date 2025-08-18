@@ -61,6 +61,12 @@ const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: strin
     accessory: { label: 'Acessório', icon: <Gem /> },
 };
 
+interface ZoomableImageDialogProps {
+    src: string;
+    alt: string;
+    zoom: number;
+    setZoom: (value: number) => void;
+}
 
 export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const { toast } = useToast();
@@ -129,7 +135,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         toast({ title: "Descrição Gerada!", description: "A IA analisou a peça de roupa." });
     } else {
         setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: false }}));
-        toast({ title: "Erro na Descrição", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
+        toast({ title: "Erro na Descrição", description: result.error || "Algo deu errado.", variant: "destructive" });
     }
   };
 
@@ -246,7 +252,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
           toast({ title: "Look Gerado!", description: "A peça foi aplicada à modelo." });
       } else {
           setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingLook: false } }));
-          toast({ title: "Erro ao Gerar Look", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
+          toast({ title: "Erro ao Gerar Look", description: result.error || "Algo deu errado.", variant: "destructive" });
       }
   };
 
@@ -280,7 +286,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         toast({ title: "Look Completo Gerado!", description: "Todas as peças foram combinadas." });
     } else {
         setCompleteLookState(prev => ({ ...prev, isGeneratingLook: false }));
-        toast({ title: "Erro ao Gerar Look Completo", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
+        toast({ title: "Erro ao Gerar Look Completo", description: result.error || "Algo deu errado.", variant: "destructive" });
     }
   };
 
@@ -359,7 +365,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         setIsDragging(false);
     };
     
-    const ZoomableImageDialog = ({ src, alt }: { src: string; alt: string; }) => (
+    const ZoomableImageDialog = ({ src, alt, zoom, setZoom }: ZoomableImageDialogProps) => (
         <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -407,7 +413,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     </div>
                 )}
                 <div className="flex items-center gap-4">
-                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))} />
+                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} />
                     <Slider
                         value={[zoom]}
                         min={0.5}
@@ -415,7 +421,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         step={0.1}
                         onValueChange={(value) => setZoom(value[0])}
                     />
-                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(prev => Math.min(3, prev + 0.1))} />
+                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.min(3, zoom + 0.1))} />
                 </div>
             </DialogContent>
         </Dialog>
@@ -486,7 +492,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                 </Button>
                 <div className="col-span-2 grid grid-cols-3 gap-2">
-                    <ZoomableImageDialog src={garment.result} alt={`${label} result`} />
+                    <ZoomableImageDialog src={garment.result} alt={`${label} result`} zoom={zoom} setZoom={setZoom} />
                     <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook}>
                         <RefreshCw/> Refazer
                     </Button>
@@ -556,7 +562,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                             </Button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                            <ZoomableImageDialog src={completeLookState.result} alt="Look Completo Result" />
+                             <ZoomableImageDialog src={completeLookState.result} alt="Look Completo Result" zoom={zoom} setZoom={setZoom} />
                             <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
                                 <RefreshCw/> Refazer
                             </Button>
@@ -684,3 +690,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
+
+    
