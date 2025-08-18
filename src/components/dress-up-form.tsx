@@ -420,9 +420,10 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 </Tooltip>
             </TooltipProvider>
             <DialogContent
-                className="max-w-4xl h-auto p-4 bg-background/80 backdrop-blur-sm flex flex-col gap-4"
+                className="max-w-4xl h-auto p-0 bg-background/80 backdrop-blur-sm flex flex-col gap-0 border-0"
                 onInteractOutside={(e) => e.preventDefault()}
             >
+              <div className="flex flex-col gap-4 p-4">
                 <DialogTitle className="sr-only">{alt}</DialogTitle>
                 <div
                     className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
@@ -463,6 +464,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     />
                     <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.min(3, zoom + 0.1))} />
                 </div>
+              </div>
             </DialogContent>
         </Dialog>
     );
@@ -631,7 +633,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
 
   return (
-    <>
+    <TooltipProvider>
        <AlertDialog open={lowResWarning.open} onOpenChange={(open) => !open && setLowResWarning({ open: false, onAccept: null })}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -705,7 +707,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                       </AlertDescription>
                     </Alert>
 
-                    <Accordion type="multiple" className="w-full" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
+                    <Accordion type="multiple" className="w-full" defaultValue={['top']}>
                         {(Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).map(type => (
                             <AccordionItem value={type} key={type}>
                                 <AccordionTrigger className="text-base md:text-lg font-semibold hover:no-underline">
@@ -735,10 +737,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              </Card>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
-
-    
-
-    
