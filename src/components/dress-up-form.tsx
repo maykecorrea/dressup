@@ -707,7 +707,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         <br/>
                         <span className="font-semibold text-secondary/90">Ao adicionar uma imagem, a IA irá focar exclusivamente naquela peça e na parte do corpo correspondente para criar o resultado.</span>
                         <div className="mt-4 space-y-3">
-                            <p className="text-sm text-primary font-semibold [text-shadow:0_0_8px_hsl(var(--primary-foreground))]">
+                            <p className="text-sm text-foreground font-semibold">
                                 DICA: Para fundir as peças e ver o resultado integral com melhor qualidade, gere 1 imagem de cada peça e depois use a magia do "Gerador de Look Completo" para ele combinar tudo. Para um look de referência, adicione a imagem com fundo branco para melhores resultados.
                             </p>
                             <div className="space-y-2 text-sm">
