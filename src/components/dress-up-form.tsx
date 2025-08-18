@@ -61,13 +61,6 @@ const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: strin
     accessory: { label: 'Acessório', icon: <Gem /> },
 };
 
-interface ZoomableImageDialogProps {
-    src: string;
-    alt: string;
-    zoom: number;
-    setZoom: (value: number) => void;
-}
-
 export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -379,18 +372,18 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         setIsDragging(false);
     };
 
-    const ZoomableImageDialog = ({ src, alt, zoom, setZoom }: ZoomableImageDialogProps) => (
-        <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
+    const ZoomableImage = ({src, alt}: {src: string; alt: string}) => (
+         <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <DialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                            <Eye className="h-5 w-5" />
-                        </Button>
-                    </DialogTrigger>
+                     <DialogTrigger asChild>
+                         <div className="w-full h-full relative cursor-zoom-in group">
+                             <Image src={src} alt={alt} fill style={{objectFit:"contain"}} className="p-2 transition-transform duration-300 group-hover:scale-105"/>
+                         </div>
+                     </DialogTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Visualizar com Zoom</p>
+                    <p>Clique para dar zoom</p>
                 </TooltipContent>
             </Tooltip>
             <DialogContent
@@ -491,7 +484,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
              {garment.isGeneratingLook ? (
                 <div className="text-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /><p className="text-sm mt-2">Gerando look...</p></div>
              ) : garment.result ? (
-                <Image src={garment.result} alt={`${label} result`} fill style={{objectFit:"contain"}} className="p-2"/>
+                <ZoomableImage src={garment.result} alt={`${label} result`} />
              ) : (
                 <div className="text-center text-muted-foreground p-4">
                     <Sparkles className="mx-auto h-12 w-12 mb-2 text-secondary/50" />
@@ -505,15 +498,12 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                 <Button onClick={() => handleSaveToGallery(garment.result)} disabled={isSaving} className="w-full">
                     {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                 </Button>
-                <div className="col-span-2 grid grid-cols-3 gap-2">
-                    <ZoomableImageDialog src={garment.result} alt={`${label} result`} zoom={zoom} setZoom={setZoom} />
-                    <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook}>
-                        <RefreshCw/> Refazer
-                    </Button>
-                    <Button onClick={handleClear} variant="destructive">
-                        <Trash2 /> Limpar
-                    </Button>
-                </div>
+                <Button onClick={() => handleGenerateLook(type)} variant="secondary" disabled={garment.isGeneratingLook} className="w-full">
+                    <RefreshCw/> Refazer
+                </Button>
+                <Button onClick={handleClear} variant="destructive" className="w-full">
+                    <Trash2 /> Limpar
+                </Button>
             </div>
           ) : (
              <Button onClick={() => handleGenerateLook(type)} disabled={!garment.description || garment.isGeneratingLook || !modelDataUri} className="w-full">
@@ -570,7 +560,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                     {completeLookState.isGeneratingLook ? (
                         <div className="text-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /><p className="text-sm mt-2">Combinando todas as peças...</p></div>
                     ) : completeLookState.result ? (
-                        <Image src={completeLookState.result} alt="Look Completo Result" fill style={{ objectFit: "contain" }} className="p-2" />
+                        <ZoomableImage src={completeLookState.result} alt="Look Completo Result" />
                     ) : (
                         <div className="text-center text-muted-foreground p-4">
                             <Sparkles className="mx-auto h-12 w-12 mb-2 text-secondary/50" />
@@ -587,8 +577,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                                 {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Salvar
                             </Button>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                             <ZoomableImageDialog src={completeLookState.result} alt="Look Completo Result" zoom={zoom} setZoom={setZoom} />
+                        <div className="grid grid-cols-2 gap-2">
                             <Button onClick={handleGenerateCompleteLook} variant="secondary" disabled={completeLookState.isGeneratingLook}>
                                 <RefreshCw/> Refazer
                             </Button>
@@ -716,3 +705,5 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
+
+    
