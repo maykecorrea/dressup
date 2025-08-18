@@ -92,6 +92,113 @@ const garmentConfig: Record<Exclude<GarmentType, 'completeLook'>, { label: strin
     accessory: { label: 'Acessório', icon: <Gem /> },
 };
 
+
+const ZoomableImage = ({src, alt}: {src: string; alt: string}) => {
+    const [zoom, setZoom] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
+    const imageRef = useRef<HTMLDivElement>(null);
+
+    const resetZoomAndPosition = () => {
+        setZoom(1);
+        setPosition({ x: 0, y: 0 });
+    };
+
+    const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (zoom > 1) {
+            setIsDragging(true);
+            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        if (isDragging && imageRef.current) {
+            const newX = e.clientX - startDrag.x;
+            const newY = e.clientY - startDrag.y;
+            setPosition({ x: newX, y: newY });
+        }
+    };
+
+    const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    return (
+         <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <DialogTrigger asChild>
+                             <div className="w-full h-full relative cursor-zoom-in group">
+                                 <Image src={src} alt={alt} fill style={{objectFit:"contain"}} className="p-2 transition-transform duration-300 group-hover:scale-105"/>
+                             </div>
+                         </DialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Clique para dar zoom</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <DialogContent
+                className="max-w-4xl h-auto p-0 bg-background/80 backdrop-blur-sm flex flex-col gap-0 border-0"
+                onInteractOutside={(e) => e.preventDefault()}
+            >
+              <div className="flex flex-col gap-4 p-4">
+                <DialogTitle className="sr-only">{alt}</DialogTitle>
+                <div
+                    className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <div
+                        ref={imageRef}
+                        className={cn(
+                            "relative transition-transform duration-200",
+                            isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                        )}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                        }}
+                    >
+                        <Image src={src} alt={alt} layout="fill" objectFit="contain" />
+                    </div>
+                </div>
+                {zoom > 1 && (
+                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
+                        <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
+                        <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
+                    </div>
+                )}
+                <div className="flex items-center gap-4">
+                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} />
+                    <Slider
+                        value={[zoom]}
+                        min={0.5}
+                        max={3}
+                        step={0.1}
+                        onValueChange={(value) => setZoom(value[0])}
+                    />
+                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.min(3, zoom + 0.1))} />
+                </div>
+              </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -118,12 +225,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   const [lowResWarning, setLowResWarning] = useState<{ open: boolean; onAccept: (() => void) | null }>({ open: false, onAccept: null });
 
 
-  // Zoom state
-  const [zoom, setZoom] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
-  const imageRef = useRef<HTMLDivElement>(null);
 
 
   const handleLogout = async () => {
@@ -379,105 +480,6 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-    // Zoom handlers
-    const resetZoomAndPosition = () => {
-        setZoom(1);
-        setPosition({ x: 0, y: 0 });
-    };
-
-    const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.preventDefault();
-        if (zoom > 1) {
-            setIsDragging(true);
-            setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
-        }
-    };
-
-    const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.preventDefault();
-        if (isDragging && imageRef.current) {
-            const newX = e.clientX - startDrag.x;
-            const newY = e.clientY - startDrag.y;
-            setPosition({ x: newX, y: newY });
-        }
-    };
-
-    const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const ZoomableImage = ({src, alt}: {src: string; alt: string}) => (
-         <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                         <DialogTrigger asChild>
-                             <div className="w-full h-full relative cursor-zoom-in group">
-                                 <Image src={src} alt={alt} fill style={{objectFit:"contain"}} className="p-2 transition-transform duration-300 group-hover:scale-105"/>
-                             </div>
-                         </DialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Clique para dar zoom</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <DialogContent
-                className="max-w-4xl h-auto p-0 bg-background/80 backdrop-blur-sm flex flex-col gap-0 border-0"
-                onInteractOutside={(e) => e.preventDefault()}
-            >
-              <div className="flex flex-col gap-4 p-4">
-                <DialogTitle className="sr-only">{alt}</DialogTitle>
-                <div
-                    className="w-full h-[75vh] overflow-hidden flex items-center justify-center"
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseLeave}
-                >
-                    <div
-                        ref={imageRef}
-                        className={cn(
-                            "relative transition-transform duration-200",
-                            isDragging ? 'cursor-grabbing' : (zoom > 1 ? 'cursor-grab' : 'cursor-default')
-                        )}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
-                        }}
-                    >
-                        <Image src={src} alt={alt} layout="fill" objectFit="contain" />
-                    </div>
-                </div>
-                {zoom > 1 && (
-                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 text-white rounded-full px-4 py-2 text-sm pointer-events-none animate-pulse">
-                        <Move className="h-5 w-5 text-secondary" style={{filter: 'drop-shadow(0 0 5px hsl(var(--secondary)))'}} />
-                        <span className="font-semibold tracking-wider" style={{textShadow: '0 0 5px hsl(var(--secondary))'}}>Clique e arraste para mover</span>
-                    </div>
-                )}
-                <div className="flex items-center gap-4">
-                    <ZoomOut className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} />
-                    <Slider
-                        value={[zoom]}
-                        min={0.5}
-                        max={3}
-                        step={0.1}
-                        onValueChange={(value) => setZoom(value[0])}
-                    />
-                    <ZoomIn className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => setZoom(Math.min(3, zoom + 0.1))} />
-                </div>
-              </div>
-            </DialogContent>
-        </Dialog>
-    );
 
   const GarmentSection = ({ type }: { type: Exclude<GarmentType, 'completeLook'> }) => {
     const garment = garments[type];
