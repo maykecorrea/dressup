@@ -37,7 +37,7 @@ type GarmentType = 'top' | 'pants' | 'coat' | 'shoes' | 'accessory' | 'completeL
 
 interface GarmentState {
     preview: string | null;
-    description: string | null; 
+    description: string | null;
     result: string | null;
     isGeneratingDescription: boolean;
     isGeneratingLook: boolean;
@@ -45,7 +45,7 @@ interface GarmentState {
 
 const initialGarmentState: GarmentState = {
     preview: null,
-    description: null, 
+    description: null,
     result: null,
     isGeneratingDescription: false,
     isGeneratingLook: false,
@@ -75,7 +75,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
 
   const [modelPreview, setModelPreview] = useState<string | null>(null);
   const [modelDataUri, setModelDataUri] = useState<string>('');
-  
+
   const [garments, setGarments] = useState<Record<Exclude<GarmentType, 'completeLook'>, GarmentState>>({
       top: { ...initialGarmentState },
       pants: { ...initialGarmentState },
@@ -84,15 +84,8 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       accessory: { ...initialGarmentState },
   });
 
-  const [completeLookState, setCompleteLookState] = useState<{
-      preview: string | null;
-      result: string | null;
-      isGeneratingLook: boolean;
-  }>({
-      preview: null,
-      result: null,
-      isGeneratingLook: false,
-  });
+  const [completeLookState, setCompleteLookState] = useState<GarmentState>({ ...initialGarmentState });
+
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>(['top']);
@@ -119,22 +112,35 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     }
   };
 
-  const handleGenerateDescription = async (garmentPreview: string, type: Exclude<GarmentType, 'completeLook'>) => {
-    setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: true }}));
+  const handleGenerateDescription = async (garmentPreview: string, type: GarmentType) => {
+    if (type === 'completeLook') {
+        setCompleteLookState(prev => ({...prev, isGeneratingDescription: true }));
+    } else {
+        setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: true }}));
+    }
+
     const result = await performGenerateDescription({ garmentPhotoDataUri: garmentPreview });
 
     if (result.success && result.description) {
-        setGarments(prev => ({
-            ...prev,
-            [type]: {
-                ...prev[type],
-                description: result.description,
-                isGeneratingDescription: false,
-            }
-        }));
+        if (type === 'completeLook') {
+            setCompleteLookState(prev => ({ ...prev, description: result.description, isGeneratingDescription: false }));
+        } else {
+            setGarments(prev => ({
+                ...prev,
+                [type]: {
+                    ...prev[type],
+                    description: result.description,
+                    isGeneratingDescription: false,
+                }
+            }));
+        }
         toast({ title: "Descrição Gerada!", description: "A IA analisou a peça de roupa." });
     } else {
-        setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: false }}));
+        if (type === 'completeLook') {
+            setCompleteLookState(prev => ({...prev, isGeneratingDescription: false }));
+        } else {
+            setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: false }}));
+        }
         toast({ title: "Erro na Descrição", description: result.error || "Algo deu errado.", variant: "destructive" });
     }
   };
@@ -155,21 +161,25 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     });
   };
 
-  const processFile = (file: File, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
+  const processFile = (file: File, type: 'model' | GarmentType) => {
     const reader = new FileReader();
     reader.onloadend = () => {
         const dataUri = reader.result as string;
-        
+
         if (type === 'model') {
             setModelPreview(dataUri);
             setModelDataUri(dataUri);
         } else if (type === 'completeLook') {
-            setCompleteLookState(prev => ({ ...prev, preview: dataUri }));
+            setCompleteLookState(prev => ({
+                ...initialGarmentState,
+                preview: dataUri
+            }));
+            handleGenerateDescription(dataUri, 'completeLook');
         } else {
             setGarments(prev => ({
                 ...prev,
-                [type]: { 
-                    ...initialGarmentState, 
+                [type]: {
+                    ...initialGarmentState,
                     preview: dataUri,
                 }
             }));
@@ -180,7 +190,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     reader.readAsDataURL(file);
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | Exclude<GarmentType, 'completeLook'> | 'completeLook') => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: 'model' | GarmentType) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -193,11 +203,11 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     } else {
         proceedWithUpload();
     }
-    
+
     // Clear the input value to allow re-uploading the same file
     event.target.value = '';
   };
-  
+
   const handleMultipleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -241,7 +251,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       }
 
       setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingLook: true } }));
-      
+
       const result = await performDressUp({
           modelPhotoDataUri: modelDataUri,
           garmentDescription: garment.description,
@@ -262,16 +272,20 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         return;
     }
 
-    const descriptions = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[])
+    const individualDescriptions = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[])
         .map(type => garments[type].description)
         .filter(Boolean);
 
-    if (descriptions.length === 0) {
-        toast({ title: "Erro", description: "Nenhuma descrição de peça foi gerada. Adicione pelo menos uma peça e aguarde a IA.", variant: "destructive" });
+    const completeLookDescription = completeLookState.description;
+
+    const allDescriptions = [...individualDescriptions, completeLookDescription].filter(Boolean);
+
+    if (allDescriptions.length === 0) {
+        toast({ title: "Erro", description: "Nenhuma descrição de peça foi gerada. Adicione pelo menos uma peça ou um look de referência.", variant: "destructive" });
         return;
     }
 
-    const combinedDescription = descriptions.join(' e ');
+    const combinedDescription = allDescriptions.join(' e ');
 
     setCompleteLookState(prev => ({ ...prev, isGeneratingLook: true }));
 
@@ -296,7 +310,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     setIsSaving(true);
     try {
         const imageFile = await imageCompression.dataURLtoFile(imageDataUri, 'compressed-image.jpg');
-        
+
         const options = {
             maxSizeMB: 0.2, // (max 200KB)
             maxWidthOrHeight: 1024,
@@ -331,7 +345,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
     // Zoom handlers
     const resetZoomAndPosition = () => {
         setZoom(1);
@@ -364,7 +378,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         e.preventDefault();
         setIsDragging(false);
     };
-    
+
     const ZoomableImageDialog = ({ src, alt, zoom, setZoom }: ZoomableImageDialogProps) => (
         <Dialog onOpenChange={(open) => !open && resetZoomAndPosition()}>
             <Tooltip>
@@ -512,14 +526,14 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
   }
 
   const CompleteLookSection = () => {
-    const hasAnyGarment = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).some(type => garments[type].preview);
+    const hasAnyGarment = (Object.keys(garmentConfig) as Exclude<GarmentType, 'completeLook'>[]).some(type => garments[type].preview) || completeLookState.preview;
     const handleClear = () => {
-        setCompleteLookState({ result: null, isGeneratingLook: false, preview: null });
+        setCompleteLookState({ ...initialGarmentState });
     }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 border rounded-lg">
-            {/* Coluna Esquerda: Upload de Referência */}
+            {/* Coluna Esquerda: Upload de Referência e Descrição */}
              <div className="space-y-4">
                 <Card className="w-full relative group overflow-hidden transition-all duration-300 hover:shadow-xl bg-muted/20 aspect-[4/5]">
                     <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center text-center text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity z-10 p-2 rounded-lg">
@@ -533,11 +547,23 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                       accept="image/png, image/jpeg, image/webp"
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                       onChange={(e) => handleFileChange(e, 'completeLook')}
-                      disabled={completeLookState.isGeneratingLook}
+                      disabled={completeLookState.isGeneratingLook || completeLookState.isGeneratingDescription}
                     />
                 </Card>
+                 <Card className="flex flex-col min-h-[10rem]">
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-base flex items-center gap-2"><FileText /> Descrição (via Gemini)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 text-sm flex-grow">
+                        {completeLookState.isGeneratingDescription ? (
+                            <div className="flex items-center gap-2 h-full"><Loader2 className="animate-spin" /> Gerando...</div>
+                        ) : (
+                            <p className="text-muted-foreground break-words">{completeLookState.description || "Aguardando imagem para gerar descrição..."}</p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
-            
+
             {/* Coluna Direita: Resultado e Ações */}
             <div className="space-y-4">
                 <div className="aspect-[4/5] w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center overflow-hidden bg-muted/20 relative">
@@ -690,5 +716,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
-
-    
