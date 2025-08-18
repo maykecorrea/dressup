@@ -708,6 +708,17 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
                         Adicione as peças de roupa e deixe a IA trabalhar. Cada peça é analisada e aplicada separadamente.
                         <br/>
                         <span className="font-semibold text-secondary/90">Ao adicionar uma imagem, a IA irá focar exclusivamente naquela peça e na parte do corpo correspondente para criar o resultado.</span>
+                        <div className="mt-4 space-y-3">
+                            <p className="text-sm text-primary font-semibold">
+                                DICA: Para fundir as peças e ver o resultado integral com melhor qualidade, gere 1 imagem de cada peça e depois use a magia do "Gerador de Look Completo" para ele combinar tudo. Para um look de referência, adicione a imagem com fundo branco para melhores resultados.
+                            </p>
+                            <div className="space-y-2 text-sm">
+                                <p className="text-destructive font-bold animate-pulse">NÃO adicione uma roupa com o fundo da mesma cor da peça.</p>
+                                <p className="text-destructive font-bold animate-pulse">NÃO coloque roupas amassadas ou dobradas para que a IA tenha noção de tamanho e profundidade.</p>
+                                <p className="text-destructive font-bold animate-pulse">NÃO envie imagens muito pesadas ou grandes para não sobrecarregar a ferramenta.</p>
+                                <p className="text-destructive font-bold animate-pulse">Dê preferência a fotos frontais e bem iluminadas tanto do modelo quanto das peças.</p>
+                            </div>
+                        </div>
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
