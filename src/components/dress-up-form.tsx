@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import imageCompression from 'browser-image-compression';
 
 
 // Custom Pants Icon
@@ -128,7 +129,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         toast({ title: "Descrição Gerada!", description: "A IA analisou a peça de roupa." });
     } else {
         setGarments(prev => ({...prev, [type]: { ...prev[type], isGeneratingDescription: false }}));
-        toast({ title: "Erro na Descrição", description: result.error || "Algo deu errado.", variant: "destructive" });
+        toast({ title: "Erro na Descrição", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
     }
   };
 
@@ -245,7 +246,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
           toast({ title: "Look Gerado!", description: "A peça foi aplicada à modelo." });
       } else {
           setGarments(prev => ({ ...prev, [type]: { ...prev[type], isGeneratingLook: false } }));
-          toast({ title: "Erro ao Gerar Look", description: result.error || "Algo deu errado.", variant: "destructive" });
+          toast({ title: "Erro ao Gerar Look", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
       }
   };
 
@@ -279,7 +280,7 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
         toast({ title: "Look Completo Gerado!", description: "Todas as peças foram combinadas." });
     } else {
         setCompleteLookState(prev => ({ ...prev, isGeneratingLook: false }));
-        toast({ title: "Erro ao Gerar Look Completo", description: result.error || "Algo deu errado.", variant: "destructive" });
+        toast({ title: "Erro ao Gerar Look Completo", description: result.error?.cause || result.error?.message || "Algo deu errado.", variant: "destructive" });
     }
   };
 
@@ -288,15 +289,31 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     if (!imageDataUri) return;
     setIsSaving(true);
     try {
-      const gallery = JSON.parse(localStorage.getItem('virtual-dress-up-gallery') || '[]');
-      gallery.unshift(imageDataUri);
-      localStorage.setItem('virtual-dress-up-gallery', JSON.stringify(gallery));
-      toast({ title: 'Salvo!', description: 'Seu look foi salvo na galeria.' });
-      onImageSaved();
+        const imageFile = await imageCompression.dataURLtoFile(imageDataUri, 'compressed-image.jpg');
+        
+        const options = {
+            maxSizeMB: 0.2, // (max 200KB)
+            maxWidthOrHeight: 1024,
+            useWebWorker: true
+        };
+
+        const compressedFile = await imageCompression(imageFile, options);
+        const compressedDataUri = await imageCompression.getDataUrlFromFile(compressedFile);
+
+        const gallery = JSON.parse(localStorage.getItem('virtual-dress-up-gallery') || '[]');
+        gallery.unshift(compressedDataUri);
+        localStorage.setItem('virtual-dress-up-gallery', JSON.stringify(gallery));
+        toast({ title: 'Salvo!', description: 'Seu look foi salvo na galeria.' });
+        onImageSaved();
     } catch (error) {
-      toast({ title: 'Erro ao Salvar', variant: 'destructive' });
+        console.error("Failed to save to gallery:", error);
+        let errorMessage = 'Não foi possível salvar na galeria.';
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+            errorMessage = 'Armazenamento cheio. Exclua alguns itens da galeria.';
+        }
+        toast({ title: 'Erro ao Salvar', description: errorMessage, variant: 'destructive' });
     } finally {
-      setIsSaving(false);
+        setIsSaving(false);
     }
   };
 
@@ -667,5 +684,3 @@ export function DressUpForm({ onImageSaved }: DressUpFormProps) {
     </TooltipProvider>
   );
 }
-
-    
